@@ -17,6 +17,12 @@ export interface EventConstraints {
     raceDurationHours: number; // e.g. 6.5
     distance: number; // in km
     blockedDates: string[]; // ["2026-09-27"]
+    // New Configs
+    negativeHolidayImpact: boolean;
+    incorporateTrainingTime: boolean;
+    allowWeekends: boolean;
+    allowWeekdays: boolean;
+    considerHolidays: boolean;
 }
 
 export interface DayScore {
@@ -40,114 +46,171 @@ import type { Holiday } from './holidays';
 
 export function calculateMonthScores(
     constraints: EventConstraints,
-    weatherData: Record<string, AverageWeather> = {},
-    holidays: Record<string, Holiday> = {}
+    weatherData: Record<string, AverageWeather>,
+    holidays: Holiday[]
 ): DayScore[] {
     const scores: DayScore[] = [];
+
+    // Helper: get month days
+    const daysInMonth = new Date(constraints.targetMonth.getFullYear(), constraints.targetMonth.getMonth() + 1, 0).getDate();
     const today = new Date();
 
-    // Parse start time (e.g. "09:00")
-    const [startHour, startMin] = constraints.raceStartTime.split(':').map(Number);
+    // Map holidays for fast lookup: "YYYY-MM-DD"
+    const holidayMap = new Map<string, Holiday>();
+    holidays.forEach(h => {
+        holidayMap.set(h.date, h);
+    });
 
-    // Iterate through all days in the target Month
-    const year = constraints.targetMonth.getFullYear();
-    const month = constraints.targetMonth.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+        // Create date in LOCAL time to match calendar (important!)
+        const currentDate = new Date(constraints.targetMonth.getFullYear(), constraints.targetMonth.getMonth(), day, 12, 0, 0);
 
-    for (let d = 1; d <= daysInMonth; d++) {
-        const currentDate = new Date(year, month, d);
-        const dateKey = currentDate.toISOString().split('T')[0];
+        // -----------------------------
+        // SCORING LOGIC
+        // -----------------------------
         let score = 100;
         const reasons: string[] = [];
 
-        // 1. Check Training Time
+        // 1. Check Training Time (Optional)
         const weeksAvailable = differenceInWeeks(currentDate, today);
-        if (weeksAvailable < constraints.minTrainingWeeks) {
+        if (constraints.incorporateTrainingTime) {
+            if (weeksAvailable < constraints.minTrainingWeeks) {
+                // If checking prep time, this is critical
+                score = 0;
+                reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
+            }
+        }
+
+        // 2. Blocked Dates (Manual Block)
+        const dateString = currentDate.toISOString().split('T')[0];
+        if (constraints.blockedDates.includes(dateString)) {
             score = 0;
-            reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
+            reasons.push("Blocked Date");
         }
 
-        // 2. Daylight Analysis (Advanced)
-        // Fix: Use noon to avoid UTC day shift issues when local time is midnight (e.g. 00:00 CEST = 22:00 UTC previous day)
-        const sunCalcDate = new Date(currentDate);
-        sunCalcDate.setHours(12, 0, 0, 0);
-        const sunTimes = SunCalc.getTimes(sunCalcDate, constraints.location.lat, constraints.location.lng);
-        const daylightHours = (sunTimes.sunset.getTime() - sunTimes.sunrise.getTime()) / (1000 * 60 * 60);
-
-        // Calculate Race Times
-        const raceStart = new Date(currentDate);
-        raceStart.setHours(startHour, startMin, 0, 0);
-
-        const raceEnd = new Date(raceStart.getTime() + constraints.raceDurationHours * 60 * 60 * 1000);
-
-        // Check darkness at start
-        if (raceStart < sunTimes.sunrise) {
-            const diffMin = (sunTimes.sunrise.getTime() - raceStart.getTime()) / (1000 * 60);
-            if (diffMin > 30) {
-                score -= 20;
-                reasons.push(`Starts in dark (${Math.round(diffMin)}m before sunrise)`);
-            }
-        }
-
-        // Check darkness at end
-        if (raceEnd > sunTimes.sunset) {
-            const diffMin = (raceEnd.getTime() - sunTimes.sunset.getTime()) / (1000 * 60);
-            if (diffMin > 0) {
-                score -= 30; // Ending in dark is often worse for small events
-                reasons.push(`Ends in dark (${Math.round(diffMin)}m after sunset)`);
-            }
-        }
-
-        // 3. Weekend & Holiday Check
+        // 3. Weekend & Holiday Check & Weekdays
         const dayOfWeek = currentDate.getDay(); // 0 = Sun, 6 = Sat
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const holiday = holidays[dateKey];
 
-        if (holiday?.type === 'public') {
-            // Public holidays are great for races!
-            // Treat as weekend-equivalent
-            // No penalty
-            reasons.push(`Holiday: ${holiday.name}`);
-        } else if (holiday?.type === 'school') {
-            // School holidays are also good (vacation time)
-            reasons.push(`School Holiday: ${holiday.name}`);
-        } else if (!isWeekend) {
-            score -= 50; // Weekdays are bad for events
-            reasons.push("Weekday");
-        }
+        // Ensure "dateKey" matches the holiday yyyy-mm-dd format strictly
+        // We use local year/month/day
+        const y = currentDate.getFullYear();
+        const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const d = String(currentDate.getDate()).padStart(2, '0');
+        const dateKey = `${y}-${m}-${d}`;
 
-        // 4. Blocked Dates / Competitions (Hard Block)
-        if (constraints.blockedDates.includes(dateKey)) {
-            score = 0;
-            reasons.push("Blocked Date / Competition");
-        }
+        const holiday = constraints.considerHolidays ? holidayMap.get(dateKey) : undefined;
+        const isHoliday = !!holiday;
 
-        // 6. Weather Scoring (New)
-        const dayWeather = weatherData[dateKey];
-        if (dayWeather) {
-            // Temp Analysis
-            if (dayWeather.avgMaxTemp > 25) {
-                score -= 30; // Too hot
-                reasons.push(`Too hot avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
-            } else if (dayWeather.avgMaxTemp < 5) {
-                score -= 20; // Too cold
-                reasons.push(`Too cold avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+        if (isHoliday) {
+            // How does holiday affect score?
+            if (constraints.negativeHolidayImpact) {
+                // Negative: Crowds, closed roads, etc.
+                score -= 30;
+                reasons.push(`Holiday (Negative Impact): ${holiday!.name}`);
+            } else {
+                // Positive: Day off, good for race
+                // No penalty, effectively treats as weekend
+                reasons.push(`Holiday: ${holiday!.name}`);
             }
+        } else if (isWeekend) {
+            if (!constraints.allowWeekends) {
+                score = 0;
+                reasons.push("Weekend (Not allowed)");
+            }
+        } else {
+            // It's a weekday
+            if (!constraints.allowWeekdays) {
+                score -= 50;
+                reasons.push("Weekday (Preferred Weekend)");
 
-            // Rain Analysis
-            if (dayWeather.avgPrecipitation > 5) {
-                score -= 40; // Heavy rain likely
-                reasons.push(`High rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
-            } else if (dayWeather.avgPrecipitation > 2) {
-                score -= 20; // Some rain likely
-                reasons.push(`Rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
+                // If strictly not allowed (e.g. checkbox off), maybe make it 0? 
+                // Context: Users usually prefer weekends but might do weekdays.
+                // Screenshot implies "Event Day: Weekends / Weekdays". 
+                // If "Weekdays" is unchecked, it probably implies they are NOT viable.
+                score = 0;
+                reasons.pop(); // remove "Weekday (Preferred Weekend)"
+                reasons.push("Weekday (Not allowed)");
+            } else {
+                // Weekdays are allowed
+                // Maybe a small penalty vs weekends? Or equal?
+                // Let's assume equal if checked.
             }
         }
 
-        // Clamp score
+
+        // 4. Daylight Analysis
+        // Race Start: constraints.raceStartTime (e.g. "07:00")
+        // Duration: constraints.raceDurationHours (e.g. 12)
+        // We need to calculate how much of the race is in DARKNESS.
+
+        // Parse start time to get hours relative to currentDate
+        const [startH, startM] = constraints.raceStartTime.split(':').map(Number);
+        const raceStart = new Date(currentDate);
+        raceStart.setHours(startH, startM, 0, 0);
+
+        const raceEnd = new Date(raceStart);
+        raceEnd.setMinutes(raceEnd.getMinutes() + constraints.raceDurationHours * 60);
+
+        // Get Sun times
+        const times = SunCalc.getTimes(currentDate, constraints.location.lat, constraints.location.lng);
+        // "nightEnd" ~ sunrise ends (civil dawn or similar, usually stick to sunrise/sunset for general use)
+        // or actually "sunrise" and "sunset".
+
+        // Let's count hours of darkness during the race window
+        // Race window: [raceStart, raceEnd]
+        // Daylight window: [times.sunrise, times.sunset]
+
+        // Overlap of Race and Daylight
+        const overlapStart = new Date(Math.max(raceStart.getTime(), times.sunrise.getTime()));
+        const overlapEnd = new Date(Math.min(raceEnd.getTime(), times.sunset.getTime()));
+
+        let daylightMinutes = 0;
+        if (overlapEnd > overlapStart) {
+            daylightMinutes = (overlapEnd.getTime() - overlapStart.getTime()) / 60000;
+        }
+
+        const raceMinutes = constraints.raceDurationHours * 60;
+        const darknessMinutes = Math.max(0, raceMinutes - daylightMinutes);
+
+        // Penalty for darkness (e.g. headlamp needed)
+        // Maybe -1 point per minute of darkness? or -10 per hour?
+        if (darknessMinutes > 0) {
+            const darknessHours = darknessMinutes / 60;
+            // score -= Math.round(darknessHours * 5); // 5 points per hour
+            // reasons.push(`${Math.round(darknessHours * 10) / 10}h Darkness`);
+            if (darknessHours > 0.5) reasons.push(`${Math.round(darknessHours * 10) / 10}h Night`);
+        }
+
+        // 5. Weather check (Historical)
+        if (weatherData) {
+            // Check weather for this specific day (YYYY-MM-DD key)
+            const dayWeather = weatherData[dateKey];
+
+            if (dayWeather) {
+                // Temp Analysis
+                if (dayWeather.avgMaxTemp > 25) {
+                    score -= 30; // Too hot
+                    reasons.push(`Too hot avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                } else if (dayWeather.avgMaxTemp < 5) {
+                    score -= 20; // Too cold
+                    reasons.push(`Too cold avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                }
+
+                // Rain Analysis
+                if (dayWeather.avgPrecipitation > 5) {
+                    score -= 40; // Heavy rain likely
+                    reasons.push(`High rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
+                } else if (dayWeather.avgPrecipitation > 2) {
+                    score -= 20; // Some rain likely
+                    reasons.push(`Rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
+                }
+            }
+        }
+
+        // Clamp Score
         score = Math.max(0, Math.min(100, score));
 
-        // Determine status
         let status: 'green' | 'yellow' | 'red' = 'green';
         if (score < 40) status = 'red';
         else if (score < 80) status = 'yellow';
@@ -158,12 +221,11 @@ export function calculateMonthScores(
             reasons,
             status,
             details: {
-                daylightHours,
-                sunrise: sunTimes.sunrise,
-                sunset: sunTimes.sunset,
+                daylightHours: (times.sunset.getTime() - times.sunrise.getTime()) / 3600000,
+                sunrise: times.sunrise,
+                sunset: times.sunset,
                 trainingWeeksAvailable: weeksAvailable,
                 isWeekend,
-                weather: dayWeather,
                 holiday: holiday?.name
             }
         });

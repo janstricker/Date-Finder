@@ -1,16 +1,55 @@
 import type { DayScore } from '../../lib/scoring';
 import { cn } from '../../lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface HeatmapCalendarProps {
     scores: DayScore[];
     selectedDate: Date | null;
+    currentMonth: Date;
     onSelectDate: (date: Date) => void;
+    onMonthChange: (offset: number) => void;
+    disabled?: boolean;
 }
 
-export function HeatmapCalendar({ scores, selectedDate, onSelectDate }: HeatmapCalendarProps) {
+export function HeatmapCalendar({
+    scores,
+    selectedDate,
+    currentMonth,
+    onSelectDate,
+    onMonthChange,
+    disabled = false
+}: HeatmapCalendarProps) {
+    const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
     return (
-        <div className="bg-white/50 backdrop-blur-md p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">2. Suitability Heatmap</h2>
+        <div className={cn(
+            "bg-white/50 backdrop-blur-md p-6 rounded-xl border border-gray-200 shadow-sm transition-opacity duration-300",
+            disabled ? "opacity-40 pointer-events-none grayscale" : "opacity-100"
+        )}>
+            {/* Header with Navigation */}
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-800">Suitability Heatmap</h2>
+
+                <div className="flex items-center gap-4 bg-white rounded-lg border border-gray-200 p-1 shadow-sm">
+                    <button
+                        onClick={() => onMonthChange(-1)}
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                        disabled={disabled}
+                    >
+                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <span className="text-sm font-semibold text-gray-900 min-w-[100px] text-center">
+                        {monthName}
+                    </span>
+                    <button
+                        onClick={() => onMonthChange(1)}
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                        disabled={disabled}
+                    >
+                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                    </button>
+                </div>
+            </div>
 
             <div className="grid grid-cols-7 gap-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
@@ -20,9 +59,15 @@ export function HeatmapCalendar({ scores, selectedDate, onSelectDate }: HeatmapC
                 ))}
 
                 {/* Empty slots for start of month offset (Monday start) */}
-                {Array.from({ length: (scores[0]?.date.getDay() + 6) % 7 || 0 }).map((_, i) => (
+                {scores.length > 0 && Array.from({ length: (scores[0]?.date.getDay() + 6) % 7 || 0 }).map((_, i) => (
                     <div key={`empty-${i}`} className="h-14 md:h-20" />
                 ))}
+
+                {scores.length === 0 && !disabled && (
+                    <div className="col-span-7 py-10 text-center text-gray-400">
+                        No data for this month.
+                    </div>
+                )}
 
                 {scores.map((dayScore) => {
                     const isSelected = selectedDate?.toDateString() === dayScore.date.toDateString();

@@ -50,7 +50,13 @@ export function useAnalysis(constraints: EventConstraints) {
         constraints.stateCode,
         constraints.minTrainingWeeks,
         constraints.raceStartTime,
-        constraints.raceDurationHours
+        constraints.raceDurationHours,
+        constraints.distance,
+        constraints.negativeHolidayImpact,
+        constraints.incorporateTrainingTime,
+        constraints.allowWeekends,
+        constraints.allowWeekdays,
+        constraints.considerHolidays
     ]);
 
     return { scores, loading, weatherData };

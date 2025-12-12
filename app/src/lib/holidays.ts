@@ -8,10 +8,10 @@ export interface Holiday {
 // Simple in-memory cache
 const cache: Record<string, Holiday[]> = {};
 
-export async function fetchHolidays(year: number, stateCode: string = 'BY'): Promise<Record<string, Holiday>> {
+export async function fetchHolidays(year: number, stateCode: string = 'BY'): Promise<Holiday[]> {
     const cacheKey = `${year}-${stateCode}`;
     if (cache[cacheKey]) {
-        return toRecord(cache[cacheKey]);
+        return cache[cacheKey];
     }
 
     const holidays: Holiday[] = [];
@@ -71,13 +71,5 @@ export async function fetchHolidays(year: number, stateCode: string = 'BY'): Pro
     }
 
     cache[cacheKey] = holidays;
-    return toRecord(holidays);
-}
-
-function toRecord(holidays: Holiday[]): Record<string, Holiday> {
-    const record: Record<string, Holiday> = {};
-    holidays.forEach(h => {
-        record[h.date] = h;
-    });
-    return record;
+    return holidays;
 }
