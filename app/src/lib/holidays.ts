@@ -16,42 +16,51 @@ export async function fetchHolidays(year: number, stateCode: string = 'BY'): Pro
 
     const holidays: Holiday[] = [];
 
-    try {
-        // 1. Fetch Public Holidays (Nager.Date)
-        // https://date.nager.at/api/v3/publicholidays/2026/DE
-        const pubResponse = await fetch(`https://date.nager.at/api/v3/publicholidays/${year}/DE`);
-        if (pubResponse.ok) {
-            const pubData = await pubResponse.json();
-            pubData.forEach((h: any) => {
-                // Filter for state if applicable, Nager returns national + state specific
-                // For simplified MVP, we accept all DE holidays or check 'counties' if complex.
-                // But Nager.Date '/DE' returns national holidays. 
-                // Specific state endpoint might be needed or filtering.
-                // For MVP, taking nationwide DE holidays.
-                holidays.push({
-                    date: h.date,
-                    name: h.name,
-                    type: 'public'
-                });
-            });
-        }
+    const isoSubdivision = `DE-${stateCode}`;
 
-        // 2. Fetch School Holidays (ferien-api.de)
-        // https://ferien-api.de/api/v1/holidays/BY/2026
-        const schoolResponse = await fetch(`https://ferien-api.de/api/v1/holidays/${stateCode}/${year}`);
+    try {
+        const publicUrl = `https://openholidaysapi.org/PublicHolidays?countryIsoCode=DE&languageIsoCode=DE&validFrom=${year}-01-01&validTo=${year}-12-31&subdivisionCode=${isoSubdivision}`;
+        const schoolUrl = `https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&languageIsoCode=DE&validFrom=${year}-01-01&validTo=${year}-12-31&subdivisionCode=${isoSubdivision}`;
+
+        const [pubResponse, schoolResponse] = await Promise.all([
+            fetch(publicUrl),
+            fetch(schoolUrl)
+        ]);
+
+        // Process School Holidays FIRST (so they can be overwritten by Public)
         if (schoolResponse.ok) {
             const schoolData = await schoolResponse.json();
+
             schoolData.forEach((h: any) => {
-                // Returns ranges: start, end
-                const startDate = new Date(h.start);
-                const endDate = new Date(h.end);
+                const startDate = new Date(h.startDate);
+                const endDate = new Date(h.endDate);
+                const name = h.name.find((n: any) => n.language === 'DE')?.text || h.name[0]?.text || 'School Holiday';
 
                 // Expand range
                 for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                     holidays.push({
                         date: d.toISOString().split('T')[0],
-                        name: h.name || 'School Holiday',
+                        name: name,
                         type: 'school'
+                    });
+                }
+            });
+        }
+
+        // Process Public Holidays SECOND (Higher priority)
+        if (pubResponse.ok) {
+            const pubData = await pubResponse.json();
+            pubData.forEach((h: any) => {
+                const startDate = new Date(h.startDate);
+                const endDate = new Date(h.endDate);
+                const name = h.name.find((n: any) => n.language === 'DE')?.text || h.name[0]?.text || 'Public Holiday';
+
+                // Public holidays result in a single day usually, but let's handle ranges just in case
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    holidays.push({
+                        date: d.toISOString().split('T')[0],
+                        name: name,
+                        type: 'public'
                     });
                 }
             });

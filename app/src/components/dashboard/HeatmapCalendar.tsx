@@ -13,10 +13,15 @@ export function HeatmapCalendar({ scores, selectedDate, onSelectDate }: HeatmapC
             <h2 className="text-lg font-semibold text-gray-800 mb-4">2. Suitability Heatmap</h2>
 
             <div className="grid grid-cols-7 gap-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                     <div key={day} className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wider py-2">
                         {day}
                     </div>
+                ))}
+
+                {/* Empty slots for start of month offset (Monday start) */}
+                {Array.from({ length: (scores[0]?.date.getDay() + 6) % 7 || 0 }).map((_, i) => (
+                    <div key={`empty-${i}`} className="h-14 md:h-20" />
                 ))}
 
                 {scores.map((dayScore) => {

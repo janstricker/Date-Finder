@@ -14,6 +14,7 @@ function App() {
     minTrainingWeeks: 12,
     raceStartTime: '09:00',
     raceDurationHours: 6.5,
+    distance: 50,
     blockedDates: ['2026-09-27'] // Mock initial block (Berlin Marathon)
   });
 

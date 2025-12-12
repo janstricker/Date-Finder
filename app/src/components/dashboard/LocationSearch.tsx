@@ -4,7 +4,7 @@ import { Search, MapPin } from 'lucide-react';
 
 interface LocationSearchProps {
     initialLocation?: { lat: number; lng: number };
-    onLocationSelect: (loc: { lat: number; lng: number; name: string }) => void;
+    onLocationSelect: (loc: { lat: number; lng: number; name: string; admin1?: string; country?: string }) => void;
 }
 
 export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
@@ -49,7 +49,9 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
         onLocationSelect({
             lat: loc.latitude,
             lng: loc.longitude,
-            name: loc.name
+            name: loc.name,
+            admin1: loc.admin1,
+            country: loc.country
         });
     };
 

@@ -15,6 +15,7 @@ export interface EventConstraints {
     // minDaylightHours?: number; // Deprecated by specific timing
     raceStartTime: string; // "09:00"
     raceDurationHours: number; // e.g. 6.5
+    distance: number; // in km
     blockedDates: string[]; // ["2026-09-27"]
 }
 
@@ -67,7 +68,10 @@ export function calculateMonthScores(
         }
 
         // 2. Daylight Analysis (Advanced)
-        const sunTimes = SunCalc.getTimes(currentDate, constraints.location.lat, constraints.location.lng);
+        // Fix: Use noon to avoid UTC day shift issues when local time is midnight (e.g. 00:00 CEST = 22:00 UTC previous day)
+        const sunCalcDate = new Date(currentDate);
+        sunCalcDate.setHours(12, 0, 0, 0);
+        const sunTimes = SunCalc.getTimes(sunCalcDate, constraints.location.lat, constraints.location.lng);
         const daylightHours = (sunTimes.sunset.getTime() - sunTimes.sunrise.getTime()) / (1000 * 60 * 60);
 
         // Calculate Race Times
@@ -104,13 +108,12 @@ export function calculateMonthScores(
             // Treat as weekend-equivalent
             // No penalty
             reasons.push(`Holiday: ${holiday.name}`);
+        } else if (holiday?.type === 'school') {
+            // School holidays are also good (vacation time)
+            reasons.push(`School Holiday: ${holiday.name}`);
         } else if (!isWeekend) {
             score -= 50; // Weekdays are bad for events
             reasons.push("Weekday");
-        }
-
-        if (holiday?.type === 'school') {
-            reasons.push(`School Holiday: ${holiday.name}`);
         }
 
         // 4. Blocked Dates / Competitions (Hard Block)
