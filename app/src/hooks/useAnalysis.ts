@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { EventConstraints, DayScore } from '../lib/scoring'; // Fix imports
-import { fetchMonthHistory, type AverageWeather } from '../lib/weather';
+import { fetchMonthHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
 import { calculateMonthScores } from '../lib/scoring';
 
 export function useAnalysis(constraints: EventConstraints) {
     const [scores, setScores] = useState<DayScore[]>([]);
     const [loading, setLoading] = useState(false);
-    const [weatherData, setWeatherData] = useState<Record<string, AverageWeather>>({});
+    const [weatherData, setWeatherData] = useState<Record<string, WeatherStats>>({});
 
     useEffect(() => {
         let mounted = true;
@@ -35,7 +35,7 @@ export function useAnalysis(constraints: EventConstraints) {
             setWeatherData(weather);
 
             // 3. Run Scoring (Sync)
-            const results = calculateMonthScores(constraints, weather, holidays);
+            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, weather);
             setScores(results);
             setLoading(false);
         }

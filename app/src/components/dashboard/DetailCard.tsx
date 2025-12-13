@@ -8,8 +8,20 @@ interface DetailCardProps {
 export function DetailCard({ dayScore }: DetailCardProps) {
     if (!dayScore) {
         return (
-            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 flex items-center justify-center text-gray-400">
-                Select a date to see analysis
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg space-y-6 animate-pulse opacity-60">
+                <div className="space-y-2">
+                    <div className="h-8 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                </div>
+                <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                </div>
             </div>
         )
     }
@@ -73,13 +85,27 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                     <div className="font-semibold text-gray-800">{dayScore.details.weather.avgMaxTemp.toFixed(1)}°C</div>
                                 </div>
                                 <div>
-                                    <div className="text-xs text-gray-400 mb-1">Avg Rain</div>
-                                    <div className="font-semibold text-gray-800">{dayScore.details.weather.avgPrecipitation.toFixed(1)}mm</div>
+                                    <div className="text-xs text-gray-400 mb-1">Rain Risk</div>
+                                    <div className={`font-semibold ${dayScore.details.weather.rainProbability > 20 ? 'text-amber-600' : 'text-gray-800'}`}>
+                                        {Math.round(dayScore.details.weather.rainProbability)}%
+                                    </div>
+                                </div>
+                                <div className="col-span-2">
+                                    <div className="text-xs text-gray-400 mb-1">Trail Condition (Mud Index)</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                            <div
+                                                className={`h-full ${dayScore.details.weather.mudIndex > 5 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                                style={{ width: `${Math.min(100, (dayScore.details.weather.mudIndex / 20) * 100)}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-600 w-8">{dayScore.details.weather.mudIndex.toFixed(1)}</span>
+                                    </div>
                                 </div>
                             </>
                         )}
                         {dayScore.details.holiday && (
-                            <div className="col-span-2 bg-blue-50 p-2 rounded text-blue-800 text-sm font-medium flex items-center gap-2">
+                            <div className="col-span-2 bg-blue-50 p-2 rounded text-blue-800 text-sm font-medium flex items-center gap-2 mt-2">
                                 <span>🎉</span> {dayScore.details.holiday}
                             </div>
                         )}

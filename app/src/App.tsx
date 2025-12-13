@@ -63,15 +63,10 @@ function App() {
           {/* Left Col: Config */}
           <div className="lg:col-span-5 space-y-8">
             <ConfigForm constraints={constraints} onUpdate={setConstraints} />
-
-            <div className="hidden lg:block">
-              {/* Only show DetailCard if we have a valid selection */}
-              {isFormValid && <DetailCard dayScore={selectedDayScore} />}
-            </div>
           </div>
 
           {/* Right Col: The Big Calendar */}
-          <div className="lg:col-span-7 relative">
+          <div className="lg:col-span-7 space-y-6 relative">
             {loading && (
               <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                 <div className="flex flex-col items-center gap-2">
@@ -90,10 +85,8 @@ function App() {
               disabled={!isFormValid}
             />
 
-            {/* Mobile Detail View */}
-            <div className="block lg:hidden mt-8">
-              {isFormValid && <DetailCard dayScore={selectedDayScore} />}
-            </div>
+            {/* Detail View (Skeleton or Real) */}
+            {isFormValid && <DetailCard dayScore={selectedDayScore} />}
           </div>
 
         </div>

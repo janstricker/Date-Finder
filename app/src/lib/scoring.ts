@@ -44,15 +44,19 @@ export interface DayScore {
 
 import type { Holiday } from './holidays';
 
+import type { Holiday } from './holidays';
+import type { WeatherStats } from './weather';
+
 export function calculateMonthScores(
+    month: Date,
     constraints: EventConstraints,
-    weatherData: Record<string, AverageWeather>,
-    holidays: Holiday[]
+    holidays: Holiday[],
+    weatherData?: Record<string, WeatherStats>
 ): DayScore[] {
     const scores: DayScore[] = [];
 
     // Helper: get month days
-    const daysInMonth = new Date(constraints.targetMonth.getFullYear(), constraints.targetMonth.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
     const today = new Date();
 
     // Map holidays for fast lookup: "YYYY-MM-DD"
@@ -191,22 +195,32 @@ export function calculateMonthScores(
                 // Temp Analysis
                 if (dayWeather.avgMaxTemp > 25) {
                     score -= 30; // Too hot
-                    reasons.push(`Too hot avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                    reasons.push(`Hot (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
                 } else if (dayWeather.avgMaxTemp < 5) {
                     score -= 20; // Too cold
-                    reasons.push(`Too cold avg (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                    reasons.push(`Cold (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
                 }
 
-                // Rain Analysis
-                if (dayWeather.avgPrecipitation > 5) {
-                    score -= 40; // Heavy rain likely
-                    reasons.push(`High rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
-                } else if (dayWeather.avgPrecipitation > 2) {
-                    score -= 20; // Some rain likely
-                    reasons.push(`Rain risk (${dayWeather.avgPrecipitation.toFixed(1)}mm)`);
+                // Rain Risk Analysis (Probability)
+                if (dayWeather.rainProbability > 50) {
+                    score -= 40;
+                    reasons.push(`High Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
+                } else if (dayWeather.rainProbability > 20) {
+                    score -= 15;
+                    reasons.push(`Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
+                }
+
+                // Mud / Trail Conditions Analysis
+                if (dayWeather.mudIndex > 15) {
+                    score -= 30;
+                    reasons.push(`Very Muddy Trails (Index: ${dayWeather.mudIndex.toFixed(1)})`);
+                } else if (dayWeather.mudIndex > 5) {
+                    score -= 10;
+                    reasons.push(`Muddy Trails`);
                 }
             }
         }
+
 
         // Clamp Score
         score = Math.max(0, Math.min(100, score));
