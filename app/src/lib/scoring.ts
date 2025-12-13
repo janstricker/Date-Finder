@@ -1,7 +1,7 @@
 
 import SunCalc from 'suncalc';
 import { differenceInWeeks } from 'date-fns';
-import type { AverageWeather } from './weather';
+import type { WeatherStats } from './weather';
 
 export interface EventConstraints {
     targetMonth: Date; // The first day of the target month
@@ -29,6 +29,7 @@ export interface DayScore {
     date: Date;
     score: number; // 0-100
     reasons: string[]; // "Too dark", "Conflict with Berlin Marathon"
+    breakdown: { label: string; value: number }[]; // [{ label: "Base Score", value: 100 }, { label: "Holiday", value: -30 }]
     status: 'green' | 'yellow' | 'red';
     details: {
         daylightHours: number;
@@ -36,16 +37,14 @@ export interface DayScore {
         sunset: Date;
         trainingWeeksAvailable: number;
         isWeekend: boolean;
-        weather?: AverageWeather;
+        weather?: WeatherStats;
         holiday?: string; // Name of holiday if any
     };
 }
 
 
-import type { Holiday } from './holidays';
 
 import type { Holiday } from './holidays';
-import type { WeatherStats } from './weather';
 
 export function calculateMonthScores(
     month: Date,
@@ -74,22 +73,35 @@ export function calculateMonthScores(
         // -----------------------------
         let score = 100;
         const reasons: string[] = [];
+        const breakdown: { label: string; value: number }[] = [];
+        breakdown.push({ label: 'Base Score', value: 100 });
+
+        // 1. Constraints Check (Blocking) - Ensure we are in the target month
+        if (currentDate.getMonth() !== constraints.targetMonth.getMonth()) {
+            // This should ideally not happen if loop is correct, but as a safeguard
+            score = 0;
+            // reasons.push("Wrong Month"); // Implicit
+        }
 
         // 1. Check Training Time (Optional)
         const weeksAvailable = differenceInWeeks(currentDate, today);
         if (constraints.incorporateTrainingTime) {
             if (weeksAvailable < constraints.minTrainingWeeks) {
                 // If checking prep time, this is critical
+                const penalty = -100;
                 score = 0;
                 reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
+                breakdown.push({ label: 'Insufficient Training Time', value: penalty });
             }
         }
 
         // 2. Blocked Dates (Manual Block)
         const dateString = currentDate.toISOString().split('T')[0];
         if (constraints.blockedDates.includes(dateString)) {
+            const penalty = -100; // Treat as full penalty for breakdown visualization
             score = 0;
             reasons.push("Blocked Date");
+            breakdown.push({ label: 'Blocked Date', value: penalty });
         }
 
         // 3. Weekend & Holiday Check & Weekdays
@@ -110,31 +122,36 @@ export function calculateMonthScores(
             // How does holiday affect score?
             if (constraints.negativeHolidayImpact) {
                 // Negative: Crowds, closed roads, etc.
-                score -= 30;
+                const penalty = -30;
+                score += penalty;
                 reasons.push(`Holiday (Negative Impact): ${holiday!.name}`);
+                breakdown.push({ label: `Holiday (${holiday!.name})`, value: penalty });
             } else {
                 // Positive: Day off, good for race
                 // No penalty, effectively treats as weekend
                 reasons.push(`Holiday: ${holiday!.name}`);
+                breakdown.push({ label: `Holiday (${holiday!.name})`, value: 0 });
             }
         } else if (isWeekend) {
             if (!constraints.allowWeekends) {
-                score = 0;
+                const penalty = -100;
+                score = 0; // Hard fail
                 reasons.push("Weekend (Not allowed)");
+                breakdown.push({ label: 'Weekend Not Allowed', value: penalty });
             }
         } else {
             // It's a weekday
             if (!constraints.allowWeekdays) {
-                score -= 50;
+                const penalty = -50;
+                score += penalty;
                 reasons.push("Weekday (Preferred Weekend)");
 
-                // If strictly not allowed (e.g. checkbox off), maybe make it 0? 
-                // Context: Users usually prefer weekends but might do weekdays.
-                // Screenshot implies "Event Day: Weekends / Weekdays". 
-                // If "Weekdays" is unchecked, it probably implies they are NOT viable.
+                // If strictly not allowed (e.g. checkbox off)
+                const strictPenalty = -100;
                 score = 0;
                 reasons.pop(); // remove "Weekday (Preferred Weekend)"
                 reasons.push("Weekday (Not allowed)");
+                breakdown.push({ label: 'Weekday Not Allowed', value: strictPenalty });
             } else {
                 // Weekdays are allowed
                 // Maybe a small penalty vs weekends? Or equal?
@@ -183,7 +200,16 @@ export function calculateMonthScores(
             const darknessHours = darknessMinutes / 60;
             // score -= Math.round(darknessHours * 5); // 5 points per hour
             // reasons.push(`${Math.round(darknessHours * 10) / 10}h Darkness`);
-            if (darknessHours > 0.5) reasons.push(`${Math.round(darknessHours * 10) / 10}h Night`);
+            if (darknessHours > 0.5) {
+                // Approximate penalty?
+                // Let's explicitly calculate it or reuse logic
+                // Previous logic wasn't deducting points explicitly here in original code?
+                // Wait, reviewing previous code... lines 182-183 were commented out.
+                // Ah, line 184 just pushed reason.
+                reasons.push(`${Math.round(darknessHours * 10) / 10}h Night`);
+                // If no points deduction, value is 0
+                // breakdown.push({ label: 'Night Hours', value: 0 }); 
+            }
         }
 
         // 5. Weather check (Historical)
@@ -194,29 +220,41 @@ export function calculateMonthScores(
             if (dayWeather) {
                 // Temp Analysis
                 if (dayWeather.avgMaxTemp > 25) {
-                    score -= 30; // Too hot
+                    const penalty = -30;
+                    score += penalty; // Too hot
                     reasons.push(`Hot (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                    breakdown.push({ label: `Hot (${dayWeather.avgMaxTemp.toFixed(1)}°C)`, value: penalty });
                 } else if (dayWeather.avgMaxTemp < 5) {
-                    score -= 20; // Too cold
+                    const penalty = -20;
+                    score += penalty; // Too cold
                     reasons.push(`Cold (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
+                    breakdown.push({ label: `Cold (${dayWeather.avgMaxTemp.toFixed(1)}°C)`, value: penalty });
                 }
 
                 // Rain Risk Analysis (Probability)
                 if (dayWeather.rainProbability > 50) {
-                    score -= 40;
+                    const penalty = -40;
+                    score += penalty;
                     reasons.push(`High Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
+                    breakdown.push({ label: 'High Rain Risk', value: penalty });
                 } else if (dayWeather.rainProbability > 20) {
-                    score -= 15;
+                    const penalty = -15;
+                    score += penalty;
                     reasons.push(`Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
+                    breakdown.push({ label: 'Rain Risk', value: penalty });
                 }
 
                 // Mud / Trail Conditions Analysis
                 if (dayWeather.mudIndex > 15) {
-                    score -= 30;
+                    const penalty = -30;
+                    score += penalty;
                     reasons.push(`Very Muddy Trails (Index: ${dayWeather.mudIndex.toFixed(1)})`);
+                    breakdown.push({ label: 'Very Muddy', value: penalty });
                 } else if (dayWeather.mudIndex > 5) {
-                    score -= 10;
+                    const penalty = -10;
+                    score += penalty;
                     reasons.push(`Muddy Trails`);
+                    breakdown.push({ label: 'Muddy', value: penalty });
                 }
             }
         }
@@ -233,6 +271,7 @@ export function calculateMonthScores(
             date: currentDate,
             score,
             reasons,
+            breakdown,
             status,
             details: {
                 daylightHours: (times.sunset.getTime() - times.sunrise.getTime()) / 3600000,
@@ -240,7 +279,8 @@ export function calculateMonthScores(
                 sunset: times.sunset,
                 trainingWeeksAvailable: weeksAvailable,
                 isWeekend,
-                holiday: holiday?.name
+                holiday: holiday?.name,
+                weather: weatherData ? weatherData[dateKey] : undefined
             }
         });
     }

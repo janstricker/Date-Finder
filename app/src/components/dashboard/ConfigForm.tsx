@@ -101,20 +101,32 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
         onUpdate({ ...constraints, raceDurationHours: parseFloat(val) });
     };
 
+    // Helper to guess state code based on admin1 (for Germany)
+    const deriveStateCode = (admin1?: string) => {
+        if (!admin1) return constraints.stateCode; // Keep current if no admin1
+        const foundState = Object.entries(GERMAN_STATES).find(([name]) =>
+            admin1.includes(name) || name.includes(admin1)
+        );
+        return foundState ? foundState[1] : constraints.stateCode;
+    };
+
     return (
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm space-y-8">
 
-            {/* SECTION 1: LOCATION */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-900">Location</h2>
-
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-gray-900">Location</label>
-                    <LocationSearch
-                        initialLocation={constraints.location}
-                        onLocationSelect={handleLocationSelect}
-                    />
-                </div>
+            {/* Location Section */}
+            <div>
+                <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                    Location
+                </h3>
+                <LocationSearch
+                    initialName={constraints.location.name}
+                    onLocationSelect={(loc) => onUpdate({
+                        ...constraints,
+                        location: { lat: loc.lat, lng: loc.lng, name: loc.name }, // Keep name
+                        stateCode: deriveStateCode(loc.admin1) // Helper to guess state? MVP: simple map
+                    })}
+                />
             </div>
 
             <hr className="border-gray-100" />
@@ -309,6 +321,6 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

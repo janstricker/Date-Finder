@@ -12,20 +12,21 @@ defaultDate.setDate(1); // Start of month
 
 function App() {
   const [constraints, setConstraints] = useState<EventConstraints>({
-    targetMonth: defaultDate,
-    // Initial State: Empty location name triggers "Disabled" state in heatmap
-    location: { lat: 50.046, lng: 11.825, name: '' },
-    stateCode: 'BY',
-    minTrainingWeeks: 24,
+    // Default to September 2026
+    targetMonth: new Date(2026, 8, 1),
+    // Default Location: Fichtelgebirge
+    location: { lat: 50.0513, lng: 11.8517, name: 'Fichtelgebirge' },
+    stateCode: 'BY', // Bayern
+    minTrainingWeeks: 12,
     raceStartTime: '07:00',
     raceDurationHours: 12,
-    distance: 50,
-    blockedDates: ['2026-09-27'], // Mock initial block (Berlin Marathon)
-    negativeHolidayImpact: false,
-    incorporateTrainingTime: false,
+    distance: 68, // 68k
+    negativeHolidayImpact: true,
+    incorporateTrainingTime: true,
     allowWeekends: true,
     allowWeekdays: false,
-    considerHolidays: false
+    considerHolidays: true,
+    blockedDates: []
   });
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported

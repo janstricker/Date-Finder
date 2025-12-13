@@ -4,6 +4,10 @@ export interface WeatherStats {
     rainProbability: number; // % chance of >1mm rain
     heavyRainProbability: number; // % chance of >5mm rain
     mudIndex: number; // Avg 3-day trailing rainfall
+    history: {
+        temps: number[];
+        rain: number[];
+    };
 }
 
 // Cache to prevent spamming API
@@ -23,7 +27,7 @@ function getTrailingRain(timeIdx: number, precipArray: number[]): number {
 }
 
 export async function fetchMonthHistory(lat: number, lng: number, month: number, year: number): Promise<Record<string, WeatherStats>> {
-    const currentYear = new Date().getFullYear();
+    const currentYear = year; // Changed from new Date().getFullYear() to use the target year
     const requests = [];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -32,7 +36,20 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
     // Let's go back 5 days from the 1st of the month.
     const leadDays = 5;
 
-    for (let i = 1; i <= 10; i++) {
+    // Storage for daily aggregation
+    // Key: Day of Month (1-31)
+    const dailyStats: Record<number, {
+        temps: number[],
+        rains: number[],
+        trailingRains: number[]
+    }> = {};
+    // Initialize dailyStats for all days of the month
+    for (let d = 1; d <= daysInMonth; d++) {
+        dailyStats[d] = { temps: [], rains: [], trailingRains: [] };
+    }
+
+    // Fetch oldest to newest for chronological order (Limit 10 years back)
+    for (let i = 10; i >= 1; i--) {
         const pastYear = currentYear - i;
 
         // Construct start date: 1st of month minus leadDays
@@ -57,50 +74,52 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
             return null;
         });
 
-        if (res) requests.push(res);
+        if (res) {
+            // Process response
+            const daily = res.daily;
+            // daily.time array matches daily.temperature_2m_max etc.
 
-        // Small delay to be nice to the API
-        await new Promise(resolve => setTimeout(resolve, 200));
+            // We need to map dates to day-of-month
+            // Note: Data includes lead days.
+            // We iterate strictly through the days of the target month (1..daysInMonth)
+            // But we access the data relative to the fetched start date.
+
+            // The API returns daily arrays.
+            // StartDate is "1 - leadDays".
+            // So index 0 is (1 - leadDays).
+            // Index 'leadDays' is Day 1.
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                // The index in the API response for day 'd'
+                // Lead days are before d=1.
+                // data[0] -> d = 1 - 5 = -4
+                // data[5] -> d = 1
+                const dataIdx = leadDays + (d - 1);
+
+                const temp = daily.temperature_2m_max[dataIdx];
+                const rain = daily.precipitation_sum[dataIdx];
+
+                // Trailing rain: sum of previous 3 days (dataIdx - 1, -2, -3)
+                const getTrailingRain = (idx: number, arr: number[]) => {
+                    let sum = 0;
+                    for (let k = 1; k <= 3; k++) {
+                        sum += (arr[idx - k] || 0);
+                    }
+                    return sum / 3; // Average of trailing 3 days
+                };
+                const trailing = getTrailingRain(dataIdx, daily.precipitation_sum);
+
+                if (temp !== null && temp !== undefined) dailyStats[d].temps.push(temp);
+                if (rain !== null && rain !== undefined) dailyStats[d].rains.push(rain);
+                dailyStats[d].trailingRains.push(trailing);
+            }
+        }
+
+        // Polite delay
+        await new Promise(r => setTimeout(r, 200));
     }
 
-    // Storage for daily aggregation
-    // Key: Day of Month (1-31)
-    const dailyStats: Record<number, {
-        temps: number[],
-        rains: number[],
-        trailingRains: number[]
-    }> = {};
-
     try {
-        const results = requests; // already awaited and resolved
-
-        results.forEach((res: any) => {
-            if (!res || !res.daily || !res.daily.time) return;
-
-            const timeArray: string[] = res.daily.time;
-            const tempArray: number[] = res.daily.temperature_2m_max;
-            const rainArray: number[] = res.daily.precipitation_sum;
-
-            timeArray.forEach((tStr, idx) => {
-                const date = new Date(tStr);
-                // We only care about the target month days (exclude the lead buffer days for the primary stats)
-                if (date.getMonth() !== month) return;
-
-                const day = date.getDate();
-                if (!dailyStats[day]) dailyStats[day] = { temps: [], rains: [], trailingRains: [] };
-
-                const temp = tempArray[idx];
-                const rain = rainArray[idx];
-
-                // Calculate trailing rain (Mud Index) using the buffer data
-                const trailing = getTrailingRain(idx, rainArray);
-
-                if (temp !== null && temp !== undefined) dailyStats[day].temps.push(temp);
-                if (rain !== null && rain !== undefined) dailyStats[day].rains.push(rain);
-                dailyStats[day].trailingRains.push(trailing);
-            });
-        });
-
         const weatherMap: Record<string, WeatherStats> = {};
 
         Object.keys(dailyStats).forEach(dayKey => {
@@ -126,7 +145,11 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                     avgPrecipitation: avgRain,
                     rainProbability: (rainDays / count) * 100,
                     heavyRainProbability: (heavyRainDays / count) * 100,
-                    mudIndex: avgMud
+                    mudIndex: avgMud,
+                    history: {
+                        temps: d.temps,
+                        rain: d.rains
+                    }
                 };
             }
         });

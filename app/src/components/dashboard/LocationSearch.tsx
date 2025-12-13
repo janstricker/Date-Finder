@@ -3,12 +3,12 @@ import { searchLocation, type GeoLocation } from '../../lib/geocoding';
 import { Search, MapPin } from 'lucide-react';
 
 interface LocationSearchProps {
-    initialLocation?: { lat: number; lng: number };
+    initialName?: string;
     onLocationSelect: (loc: { lat: number; lng: number; name: string; admin1?: string; country?: string }) => void;
 }
 
-export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
-    const [query, setQuery] = useState('');
+export function LocationSearch({ initialName = '', onLocationSelect }: LocationSearchProps) {
+    const [query, setQuery] = useState(initialName);
     const [results, setResults] = useState<GeoLocation[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
