@@ -31,7 +31,7 @@ function App() {
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported
 
-  const { scores, loading, weatherData } = useAnalysis(constraints);
+  const { scores, loading } = useAnalysis(constraints);
 
   const handleMonthChange = (offset: number) => {
     const newDate = new Date(constraints.targetMonth);

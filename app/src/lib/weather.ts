@@ -19,24 +19,14 @@ export interface WeatherStats {
 
 
 // Cache to prevent spamming API
-const weatherCache: Record<string, WeatherStats> = {};
+
 
 // Helper to get previous 3 days rainfall sum from a daily dataset
-function getTrailingRain(timeIdx: number, precipArray: number[]): number {
-    let sum = 0;
-    // We want d-1, d-2, d-3
-    for (let i = 1; i <= 3; i++) {
-        const idx = timeIdx - i;
-        if (idx >= 0) {
-            sum += precipArray[idx] || 0;
-        }
-    }
-    return sum;
-}
+
 
 export async function fetchMonthHistory(lat: number, lng: number, month: number, year: number): Promise<Record<string, WeatherStats>> {
     const currentYear = year; // Changed from new Date().getFullYear() to use the target year
-    const requests = [];
+
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     // We fetch a buffer before the month starts to calculate trailing rain (Mud Index)
@@ -152,7 +142,7 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                 const avgMaxTemp = d.tempsMax.reduce((a, b) => a + b, 0) / count;
                 const avgMinTemp = d.tempsMin.length > 0 ? d.tempsMin.reduce((a, b) => a + b, 0) / d.tempsMin.length : avgMaxTemp - 10; // Fallback if missing
                 const avgHumidity = d.humidities.length > 0 ? d.humidities.reduce((a, b) => a + b, 0) / d.humidities.length : 50;
-                const maxWind = d.winds.length > 0 ? Math.max(...d.winds) : 0; // Conservative: take max of max? Or avg of max? Let's take avg of max wind.
+
                 // Actually avg of "daily max wind" is better for general conditions.
                 const avgMaxWind = d.winds.length > 0 ? d.winds.reduce((a, b) => a + b, 0) / d.winds.length : 0;
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { EventConstraints } from '../../lib/scoring';
 import { LocationSearch } from './LocationSearch';
 import { Switch } from '../ui/Switch';
@@ -56,27 +56,7 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
         return 32; // 100k+
     };
 
-    const handleLocationSelect = (loc: { lat: number; lng: number; name: string; admin1?: string; country?: string }) => {
-        let newStateCode = constraints.stateCode;
 
-        // Try to map state name to code
-        if (loc.country === 'Germany' && loc.admin1) {
-            const foundState = Object.entries(GERMAN_STATES).find(([name]) =>
-                loc.admin1!.includes(name) || name.includes(loc.admin1!)
-            );
-            if (foundState) newStateCode = foundState[1];
-        }
-
-        onUpdate({
-            ...constraints,
-            location: {
-                lat: loc.lat,
-                lng: loc.lng,
-                name: loc.name
-            },
-            stateCode: newStateCode
-        });
-    };
 
     const updateDistance = (val: string) => {
         if (val === 'custom') {
