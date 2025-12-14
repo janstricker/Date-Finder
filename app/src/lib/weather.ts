@@ -1,14 +1,22 @@
 export interface WeatherStats {
     avgMaxTemp: number;
+    avgMinTemp: number;
+    avgHumidity: number;
+    maxWindSpeed: number;
     avgPrecipitation: number;
     rainProbability: number; // % chance of >1mm rain
     heavyRainProbability: number; // % chance of >5mm rain
     mudIndex: number; // Avg 3-day trailing rainfall
     history: {
         temps: number[];
+        tempsMin: number[];
         rain: number[];
+        humidities: number[];
+        winds: number[];
     };
 }
+
+
 
 // Cache to prevent spamming API
 const weatherCache: Record<string, WeatherStats> = {};
@@ -39,13 +47,16 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
     // Storage for daily aggregation
     // Key: Day of Month (1-31)
     const dailyStats: Record<number, {
-        temps: number[],
+        tempsMax: number[],
+        tempsMin: number[],
+        humidities: number[],
+        winds: number[],
         rains: number[],
         trailingRains: number[]
     }> = {};
     // Initialize dailyStats for all days of the month
     for (let d = 1; d <= daysInMonth; d++) {
-        dailyStats[d] = { temps: [], rains: [], trailingRains: [] };
+        dailyStats[d] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [] };
     }
 
     // Fetch oldest to newest for chronological order (Limit 10 years back)
@@ -60,7 +71,7 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
         const endDate = new Date(pastYear, month, daysInMonth);
         const endStr = endDate.toISOString().split('T')[0];
 
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,precipitation_sum&timezone=auto`;
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
 
         // Sequential Fetch to respect API rate limits (avoid 429)
         const res = await fetch(url).then(async r => {
@@ -96,7 +107,10 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                 // data[5] -> d = 1
                 const dataIdx = leadDays + (d - 1);
 
-                const temp = daily.temperature_2m_max[dataIdx];
+                const tempMax = daily.temperature_2m_max[dataIdx];
+                const tempMin = daily.temperature_2m_min[dataIdx];
+                const humidity = daily.relative_humidity_2m_mean[dataIdx];
+                const wind = daily.wind_speed_10m_max[dataIdx];
                 const rain = daily.precipitation_sum[dataIdx];
 
                 // Trailing rain: sum of previous 3 days (dataIdx - 1, -2, -3)
@@ -109,7 +123,10 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                 };
                 const trailing = getTrailingRain(dataIdx, daily.precipitation_sum);
 
-                if (temp !== null && temp !== undefined) dailyStats[d].temps.push(temp);
+                if (tempMax !== null && tempMax !== undefined) dailyStats[d].tempsMax.push(tempMax);
+                if (tempMin !== null && tempMin !== undefined) dailyStats[d].tempsMin.push(tempMin);
+                if (humidity !== null && humidity !== undefined) dailyStats[d].humidities.push(humidity);
+                if (wind !== null && wind !== undefined) dailyStats[d].winds.push(wind);
                 if (rain !== null && rain !== undefined) dailyStats[d].rains.push(rain);
                 dailyStats[d].trailingRains.push(trailing);
             }
@@ -125,14 +142,20 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
         Object.keys(dailyStats).forEach(dayKey => {
             const day = parseInt(dayKey);
             const d = dailyStats[day];
-            const count = d.temps.length;
+            const count = d.tempsMax.length;
 
             if (count > 0) {
                 // Key format: YYYY-MM-DD (target year)
                 const targetDateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
                 // Averages
-                const avgTemp = d.temps.reduce((a, b) => a + b, 0) / count;
+                const avgMaxTemp = d.tempsMax.reduce((a, b) => a + b, 0) / count;
+                const avgMinTemp = d.tempsMin.length > 0 ? d.tempsMin.reduce((a, b) => a + b, 0) / d.tempsMin.length : avgMaxTemp - 10; // Fallback if missing
+                const avgHumidity = d.humidities.length > 0 ? d.humidities.reduce((a, b) => a + b, 0) / d.humidities.length : 50;
+                const maxWind = d.winds.length > 0 ? Math.max(...d.winds) : 0; // Conservative: take max of max? Or avg of max? Let's take avg of max wind.
+                // Actually avg of "daily max wind" is better for general conditions.
+                const avgMaxWind = d.winds.length > 0 ? d.winds.reduce((a, b) => a + b, 0) / d.winds.length : 0;
+
                 const avgRain = d.rains.reduce((a, b) => a + b, 0) / count;
                 const avgMud = d.trailingRains.reduce((a, b) => a + b, 0) / count;
 
@@ -141,14 +164,20 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                 const heavyRainDays = d.rains.filter(r => r > 5.0).length;
 
                 weatherMap[targetDateKey] = {
-                    avgMaxTemp: avgTemp,
+                    avgMaxTemp,
+                    avgMinTemp,
+                    avgHumidity,
+                    maxWindSpeed: avgMaxWind,
                     avgPrecipitation: avgRain,
                     rainProbability: (rainDays / count) * 100,
                     heavyRainProbability: (heavyRainDays / count) * 100,
                     mudIndex: avgMud,
                     history: {
-                        temps: d.temps,
-                        rain: d.rains
+                        temps: d.tempsMax, // Keep for backward compat for now, or update interface
+                        tempsMin: d.tempsMin,
+                        rain: d.rains,
+                        humidities: d.humidities,
+                        winds: d.winds
                     }
                 };
             }

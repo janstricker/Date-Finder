@@ -33,18 +33,24 @@ export interface DayScore {
     status: 'green' | 'yellow' | 'red';
     details: {
         daylightHours: number;
+        dawn: Date;
         sunrise: Date;
         sunset: Date;
+        dusk: Date;
         trainingWeeksAvailable: number;
         isWeekend: boolean;
         weather?: WeatherStats;
         holiday?: string; // Name of holiday if any
+        raceStartTime: string;
+        raceDuration: number;
     };
 }
 
 
 
 import type { Holiday } from './holidays';
+
+import { formatDuration } from './utils';
 
 export function calculateMonthScores(
     month: Date,
@@ -198,18 +204,20 @@ export function calculateMonthScores(
         // Maybe -1 point per minute of darkness? or -10 per hour?
         if (darknessMinutes > 0) {
             const darknessHours = darknessMinutes / 60;
-            // score -= Math.round(darknessHours * 5); // 5 points per hour
-            // reasons.push(`${Math.round(darknessHours * 10) / 10}h Darkness`);
             if (darknessHours > 0.5) {
-                // Approximate penalty?
-                // Let's explicitly calculate it or reuse logic
-                // Previous logic wasn't deducting points explicitly here in original code?
                 // Wait, reviewing previous code... lines 182-183 were commented out.
                 // Ah, line 184 just pushed reason.
-                reasons.push(`${Math.round(darknessHours * 10) / 10}h Night`);
-                // If no points deduction, value is 0
-                // breakdown.push({ label: 'Night Hours', value: 0 }); 
+                reasons.push(`${formatDuration(darknessHours)} Night`);
+                // Calculate penalty proportional to hours, e.g. -5 per hour?
+                // For now, sticking to previous behavior (likely implicitly penalizing via other means or just warning)
+                // But let's separate "reason" from "score impact".
+                // If existing logic doesn't penalize, we push 0.
+                breakdown.push({ label: 'Night Hours', value: 0 });
+            } else {
+                breakdown.push({ label: 'Night Hours', value: 0 });
             }
+        } else {
+            breakdown.push({ label: 'Night Hours', value: 0 });
         }
 
         // 5. Weather check (Historical)
@@ -218,17 +226,107 @@ export function calculateMonthScores(
             const dayWeather = weatherData[dateKey];
 
             if (dayWeather) {
-                // Temp Analysis
-                if (dayWeather.avgMaxTemp > 25) {
-                    const penalty = -30;
-                    score += penalty; // Too hot
-                    reasons.push(`Hot (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
-                    breakdown.push({ label: `Hot (${dayWeather.avgMaxTemp.toFixed(1)}°C)`, value: penalty });
-                } else if (dayWeather.avgMaxTemp < 5) {
-                    const penalty = -20;
-                    score += penalty; // Too cold
-                    reasons.push(`Cold (${dayWeather.avgMaxTemp.toFixed(1)}°C)`);
-                    breakdown.push({ label: `Cold (${dayWeather.avgMaxTemp.toFixed(1)}°C)`, value: penalty });
+                // Temp Analysis (Ultra Specific: 50k-100k)
+                // Ideal: 5°C - 12°C
+                // Acceptable: 0°C - 18°C
+                // Poor: > 18°C or < 0°C
+                // Critical: > 25°C or < -5°C
+
+                const temp = dayWeather.avgMaxTemp;
+                const humidity = dayWeather.avgHumidity;
+                const wind = dayWeather.maxWindSpeed;
+
+                // Humidity Adjustment: High humidity (>70%) lowers heat tolerance by ~3°C
+                // Effectively, if humid, we treat the temp as 3°C higher for penalty calculation context (Heat Index proxy)
+                const effectiveTemp = (humidity > 70) ? temp + 3 : temp;
+
+                let tempPenalty = 0;
+                let tempLabel = 'Ideal Temp';
+
+                if (effectiveTemp >= 5 && effectiveTemp <= 12) {
+                    // Note: using effectiveTemp might shift a 10°C (Ideal) to 13°C (Warm) if humid.
+                    // But humidity usually affects "Feels Like" mainly in heat.
+                    // The requirement says: reduce "Hot" threshold by 3°C.
+                    // So let's stick to the specific thresholds for simplicity and clarity.
+                    // Actually, using effectiveTemp for the check is the cleanest way to "shift thresholds".
+                }
+
+                // Refined Logic using specific thresholds per plan to avoid over-penalizing ideal range
+                // Use 'temp' for cold checks, 'effectiveTemp' for heat checks?
+                // Let's keep it simple:
+                // >18 is Poor. If humid, >15 is Poor.
+                // >25 is Critical. If humid, >22 is Critical.
+
+                // Let's re-eval strictly:
+
+                if (temp >= 5 && temp <= 12) {
+                    tempPenalty = 0;
+                    tempLabel = `Ideal Temp (${temp.toFixed(1)}°C)`;
+                } else if (temp > 12) {
+                    // Heat Side
+                    // Check strict thresholds modified by humidity
+                    const limitWarm = (humidity > 70) ? 15 : 18; // Above this is Hot/Poor
+                    const limitHot = (humidity > 70) ? 22 : 25;  // Above this is Critical
+
+                    if (temp <= limitWarm) {
+                        // 12-18 (or 12-15 if humid)
+                        tempPenalty = -10;
+                        tempLabel = `Warm (${temp.toFixed(1)}°C)`;
+                    } else if (temp <= limitHot) {
+                        // 18-25 (or 15-22 if humid)
+                        tempPenalty = -20;
+                        tempLabel = (humidity > 70) ? `Humid & Hot (${temp.toFixed(1)}°C)` : `Hot (${temp.toFixed(1)}°C)`;
+                    } else {
+                        // >25 (or >22 if humid)
+                        tempPenalty = -30;
+                        tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
+                    }
+                } else {
+                    // Cold Side (< 5)
+                    // Windchill Factor
+                    const isWindy = wind > 20; // 20km/h threshold
+                    let windPenalty = 0;
+
+                    if (temp >= 0) {
+                        tempPenalty = -10;
+                        tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
+                        if (isWindy) {
+                            windPenalty = -10;
+                            tempLabel += ' + Windchill';
+                        }
+                    } else if (temp >= -5) {
+                        tempPenalty = -20;
+                        tempLabel = `Freezing (${temp.toFixed(1)}°C)`;
+                        if (isWindy) {
+                            windPenalty = -15; // Stronger windchill penalty in freezing
+                            tempLabel += ' + Severe Windchill';
+                        }
+                    } else {
+                        tempPenalty = -30;
+                        tempLabel = `Deep Freeze (${temp.toFixed(1)}°C)`;
+                    }
+
+                    tempPenalty += windPenalty;
+                }
+
+                if (tempPenalty !== 0) {
+                    score += tempPenalty;
+                    reasons.push(tempLabel);
+                    breakdown.push({ label: tempLabel, value: tempPenalty });
+                } else {
+                    // It's ideal, maybe show it in breakdown as +0?
+                    breakdown.push({ label: tempLabel, value: 0 });
+                }
+
+                // Temp Stability Analysis (Diurnal Range)
+                const tempSwing = dayWeather.avgMaxTemp - dayWeather.avgMinTemp;
+                if (tempSwing > 15) {
+                    const stabilityPenalty = -15;
+                    score += stabilityPenalty;
+                    reasons.push(`High Temp Swing (${tempSwing.toFixed(1)}°C)`);
+                    breakdown.push({ label: 'Temp Stability', value: stabilityPenalty });
+                } else {
+                    breakdown.push({ label: 'Temp Stability', value: 0 });
                 }
 
                 // Rain Risk Analysis (Probability)
@@ -237,11 +335,33 @@ export function calculateMonthScores(
                     score += penalty;
                     reasons.push(`High Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
                     breakdown.push({ label: 'High Rain Risk', value: penalty });
-                } else if (dayWeather.rainProbability > 20) {
-                    const penalty = -15;
-                    score += penalty;
-                    reasons.push(`Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
-                    breakdown.push({ label: 'Rain Risk', value: penalty });
+                }
+
+                // Acclimatization Risk (Seasonality Heuristic)
+                // "If preparation was in cold season and event is warm -> Penalty"
+                // "If preparation was in warm season and event is cold -> Penalty"
+                const month = currentDate.getMonth(); // 0 = Jan
+
+                // Heat Shock Risk: Event in Spring (Apr-Jun), implies Prep in Winter/Early Spring
+                if (month >= 3 && month <= 5) { // Apr, May, Jun
+                    if (temp > 15) {
+                        score -= 10;
+                        reasons.push('Acclimatization Risk (Sudden Heat)');
+                        breakdown.push({ label: 'Heat Shock Risk', value: -10 });
+                    }
+                }
+
+                // Cold Shock Risk: Event in Autumn (Sep-Nov), implies Prep in Summer
+                if (month >= 8 && month <= 10) { // Sep, Oct, Nov
+                    if (temp < 5) {
+                        score -= 10;
+                        reasons.push('Acclimatization Risk (Sudden Cold)');
+                        breakdown.push({ label: 'Cold Shock Risk', value: -10 });
+                    } else {
+                        breakdown.push({ label: 'Cold Shock Risk', value: 0 });
+                    }
+                } else {
+                    breakdown.push({ label: 'Cold Shock Risk', value: 0 });
                 }
 
                 // Mud / Trail Conditions Analysis
@@ -255,6 +375,8 @@ export function calculateMonthScores(
                     score += penalty;
                     reasons.push(`Muddy Trails`);
                     breakdown.push({ label: 'Muddy', value: penalty });
+                } else {
+                    breakdown.push({ label: 'Muddy', value: 0 });
                 }
             }
         }
@@ -275,12 +397,16 @@ export function calculateMonthScores(
             status,
             details: {
                 daylightHours: (times.sunset.getTime() - times.sunrise.getTime()) / 3600000,
+                dawn: times.dawn,
                 sunrise: times.sunrise,
                 sunset: times.sunset,
+                dusk: times.dusk,
                 trainingWeeksAvailable: weeksAvailable,
                 isWeekend,
                 holiday: holiday?.name,
-                weather: weatherData ? weatherData[dateKey] : undefined
+                weather: weatherData ? weatherData[dateKey] : undefined,
+                raceStartTime: constraints.raceStartTime,
+                raceDuration: constraints.raceDurationHours
             }
         });
     }

@@ -39,6 +39,10 @@ function App() {
     setConstraints(prev => ({ ...prev, targetMonth: newDate }));
   };
 
+  const handleDateChange = (date: Date) => {
+    setConstraints(prev => ({ ...prev, targetMonth: date }));
+  };
+
   const handleDaySelect = (date: Date) => {
     // Find the score object for the selected date
     const found = scores.find(s => s.date.toDateString() === date.toDateString());
@@ -83,6 +87,7 @@ function App() {
               onSelectDate={handleDaySelect}
               currentMonth={constraints.targetMonth}
               onMonthChange={handleMonthChange}
+              onDateChange={handleDateChange}
               disabled={!isFormValid}
             />
 

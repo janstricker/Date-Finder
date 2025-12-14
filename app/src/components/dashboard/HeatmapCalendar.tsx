@@ -8,6 +8,7 @@ interface HeatmapCalendarProps {
     currentMonth: Date;
     onSelectDate: (date: Date) => void;
     onMonthChange: (offset: number) => void;
+    onDateChange: (date: Date) => void;
     disabled?: boolean;
 }
 
@@ -17,9 +18,34 @@ export function HeatmapCalendar({
     currentMonth,
     onSelectDate,
     onMonthChange,
+    onDateChange,
     disabled = false
 }: HeatmapCalendarProps) {
-    const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const currentYear = currentMonth.getFullYear();
+    const currentMonthIndex = currentMonth.getMonth();
+
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Generate years: Current Year - 1 to +5
+    const baseYear = new Date().getFullYear();
+    const years = Array.from({ length: 7 }, (_, i) => baseYear - 1 + i);
+
+    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newYear = parseInt(e.target.value);
+        const newDate = new Date(currentMonth);
+        newDate.setFullYear(newYear);
+        onDateChange(newDate);
+    };
+
+    const handleMonthSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newMonthIndex = parseInt(e.target.value);
+        const newDate = new Date(currentMonth);
+        newDate.setMonth(newMonthIndex);
+        onDateChange(newDate);
+    };
 
     return (
         <div className={cn(
@@ -28,7 +54,7 @@ export function HeatmapCalendar({
         )}>
             {/* Header with Navigation */}
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Heatmap</h2>
+                <h2 className="heading font-bold text-gray-900">Heatmap Calendar</h2>
 
                 <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-0.5 shadow-sm">
                     <button
@@ -38,9 +64,28 @@ export function HeatmapCalendar({
                     >
                         <ChevronLeft className="w-4 h-4 text-gray-600" />
                     </button>
-                    <span className="text-xs font-semibold text-gray-900 min-w-[80px] text-center">
-                        {monthName}
-                    </span>
+
+                    <div className="flex gap-1">
+                        <select
+                            value={currentMonthIndex}
+                            onChange={handleMonthSelect}
+                            className="bg-transparent text-xs font-bold text-gray-900 focus:outline-none cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5"
+                        >
+                            {months.map((m, i) => (
+                                <option key={i} value={i}>{m}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={currentYear}
+                            onChange={handleYearChange}
+                            className="bg-transparent text-xs font-bold text-gray-900 focus:outline-none cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5"
+                        >
+                            {years.map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <button
                         onClick={() => onMonthChange(1)}
                         className="p-1 hover:bg-gray-100 rounded-md transition-colors"
