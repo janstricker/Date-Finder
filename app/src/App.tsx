@@ -4,13 +4,17 @@ import { useAnalysis } from './hooks/useAnalysis';
 import { ConfigForm } from './components/dashboard/ConfigForm';
 import { HeatmapCalendar } from './components/dashboard/HeatmapCalendar';
 import { DetailCard } from './components/dashboard/DetailCard';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { Footer } from './components/Footer';
 
-// Initial State: September 2026, Fichtelgebirge Coconst defaultDate = new Date();
+// Initial State: September 2026, Fichtelgebirge
 const defaultDate = new Date();
 defaultDate.setMonth(defaultDate.getMonth() + 3);
 defaultDate.setDate(1); // Start of month
 
-function App() {
+function FichtelPlanner() {
+  const { t } = useLanguage();
+
   const [constraints, setConstraints] = useState<EventConstraints>({
     // Default to September 2026
     targetMonth: new Date(2026, 8, 1),
@@ -28,7 +32,8 @@ function App() {
     considerHolidays: true,
     blockedDates: [],
     persona: 'experience',
-    checkConflictingEvents: true
+    checkConflictingEvents: true,
+    conflictRadius: 50
   });
 
   const [conflictingEvents, setConflictingEvents] = useState<any[]>([]);
@@ -48,7 +53,7 @@ function App() {
       .catch(err => console.error("Failed to load events", err));
   }, []);
 
-  const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported
+  const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null);
 
   const { scores, loading } = useAnalysis(constraints, conflictingEvents);
 
@@ -71,53 +76,59 @@ function App() {
   const isFormValid = constraints.location.name !== '';
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      <div className="flex-grow p-6 md:p-12">
+        <div className="max-w-6xl mx-auto space-y-6">
 
-      <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header removed from original code, kept clean */}
 
-        {/*<header className="mb-10">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            FichtelUltra <span className="text-blue-600">Planner</span>
-          </h1>
-          <p className="text-slate-500 mt-2">Find the perfect date for your Fichtelgebirge run.</p>
-        </header>*/}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Col: Config */}
+            <div className="lg:col-span-5 space-y-8">
+              <ConfigForm constraints={constraints} onUpdate={setConstraints} dataLastUpdated={dataLastUpdated} />
+            </div>
 
-          {/* Left Col: Config */}
-          <div className="lg:col-span-5 space-y-8">
-            <ConfigForm constraints={constraints} onUpdate={setConstraints} dataLastUpdated={dataLastUpdated} />
-          </div>
-
-          {/* Right Col: The Big Calendar */}
-          <div className="lg:col-span-7 space-y-6 relative">
-            {loading && (
-              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm font-medium text-blue-700">Analyzing...</span>
+            {/* Right Col: The Big Calendar */}
+            <div className="lg:col-span-7 space-y-6 relative">
+              {loading && (
+                <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-medium text-blue-700">{t('loading.analyzing')}</span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <HeatmapCalendar
-              scores={scores}
-              selectedDate={selectedDayScore ? selectedDayScore.date : null}
-              onSelectDate={handleDaySelect}
-              currentMonth={constraints.targetMonth}
-              onMonthChange={handleMonthChange}
-              onDateChange={handleDateChange}
-              disabled={!isFormValid}
-            />
+              <HeatmapCalendar
+                scores={scores}
+                selectedDate={selectedDayScore ? selectedDayScore.date : null}
+                onSelectDate={handleDaySelect}
+                currentMonth={constraints.targetMonth}
+                onMonthChange={handleMonthChange}
+                onDateChange={handleDateChange}
+                disabled={!isFormValid}
+              />
 
-            {/* Detail View (Skeleton or Real) */}
-            {isFormValid && <DetailCard dayScore={selectedDayScore} />}
+              {/* Detail View (Skeleton or Real) */}
+              {isFormValid && <DetailCard dayScore={selectedDayScore} />}
+            </div>
+
           </div>
-
         </div>
       </div>
+
+      <Footer />
     </div>
   )
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <FichtelPlanner />
+    </LanguageProvider>
+  );
 }
 
 export default App;

@@ -48,8 +48,10 @@ export interface EventConstraints {
 
     /** Scoring Mode / Persona */
     persona: 'competition' | 'experience';
-    /** Check for conflicting events within 50km */
+    /** Check for conflicting events within this radius (km) */
     checkConflictingEvents: boolean;
+    /** Radius in km to search for conflicting events (default 50) */
+    conflictRadius: number;
 }
 
 /**
@@ -62,6 +64,8 @@ export interface DayScore {
     score: number;
     /** Human-readable strings explaining penalties or specific conditions */
     reasons: string[];
+    /** List of conflicting events found */
+    conflicts: { name: string; url: string; distance: number }[];
     /** Detailed breakdown of score components for visualization */
     breakdown: { label: string; value: number }[];
     /** Traffic light status based on score thresholds */
@@ -90,6 +94,8 @@ import type { Holiday } from './holidays';
 
 import { formatDuration } from './utils';
 
+import type { TranslationKey } from './i18n';
+
 /**
  * Calculates a suitability score for every day in the target month.
  * 
@@ -100,10 +106,10 @@ import { formatDuration } from './utils';
  * - Apply Daylight Analysis -> Penalties for darkness during race hours.
  * - Apply Weather Analysis (if data available) -> Penalties for Temp/Rain/Wind/Mud.
  * 
-/**
  * @param month - The target month to evaluate
  * @param constraints - User preferences and event specs
  * @param holidays - List of public/school holidays for the region
+ * @param t - Translation function
  * @param weatherData - (Optional) Historical weather map
  * @param conflictingEvents - (Optional) List of other sport events to check against
  */
@@ -111,6 +117,7 @@ export function calculateMonthScores(
     month: Date,
     constraints: EventConstraints,
     holidays: Holiday[],
+    t: (key: TranslationKey, params?: Record<string, string | number>) => string,
     weatherData?: Record<string, WeatherStats>,
     conflictingEvents?: any[] // We can define a stricter type if needed
 ): DayScore[] {
@@ -135,8 +142,9 @@ export function calculateMonthScores(
         // -----------------------------
         let score = 100;
         const reasons: string[] = [];
+        const conflicts: { name: string; url: string; distance: number }[] = [];
         const breakdown: { label: string; value: number }[] = [];
-        breakdown.push({ label: 'Base Score', value: 100 });
+        breakdown.push({ label: t('breakdown.base'), value: 100 });
 
         // 1. Constraints Check (Blocking) - Ensure we are in the target month
         if (currentDate.getMonth() !== constraints.targetMonth.getMonth()) {
@@ -154,8 +162,8 @@ export function calculateMonthScores(
                     // Critical Failure (< 50% time)
                     const penalty = -100;
                     score = 0;
-                    reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
-                    breakdown.push({ label: 'Insufficient Training Time (< 50%)', value: penalty });
+                    reasons.push(t('reason.training.insufficient', { weeks: weeksAvailable, required: constraints.minTrainingWeeks }));
+                    breakdown.push({ label: t('breakdown.training'), value: penalty });
                 } else {
                     // Soft Fail (50% - 99% time)
                     // Linear penalty: -10 pts per 10% missing? 
@@ -166,8 +174,8 @@ export function calculateMonthScores(
                     // Example: 50% time (ratio 0.5) -> -50 pts.
                     const penalty = Math.round(-(1 - ratio) * 100);
                     score += penalty;
-                    reasons.push(`Short Training Prep (${Math.round(ratio * 100)}% of recommended)`);
-                    breakdown.push({ label: 'Short Training Prep', value: penalty });
+                    reasons.push(t('reason.training.short', { percent: Math.round(ratio * 100) }));
+                    breakdown.push({ label: t('breakdown.shortTraining'), value: penalty });
                 }
             }
         }
@@ -180,8 +188,8 @@ export function calculateMonthScores(
         if (constraints.blockedDates.includes(dateString)) {
             const penalty = -100; // Treat as full penalty for breakdown visualization
             score = 0;
-            reasons.push("Blocked Date");
-            breakdown.push({ label: 'Blocked Date', value: penalty });
+            reasons.push(t('reason.blocked'));
+            breakdown.push({ label: t('breakdown.blocked'), value: penalty });
         }
 
         // 2b. Conflicting Events Check
@@ -189,9 +197,9 @@ export function calculateMonthScores(
             // Find events on this date
             const eventsOnDate = conflictingEvents.filter(e => e.date === dateString);
 
-            // Check distance (simple haversine or just assume pre-filtered? 
-            // The prompt says "take other sport events... within 50km...".
-            // Implementation: We calculate distance here for precision.
+            // Use configured radius or default 50
+            const radius = constraints.conflictRadius || 50;
+
             for (const event of eventsOnDate) {
                 if (!event.coords) continue;
 
@@ -207,14 +215,19 @@ export function calculateMonthScores(
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                 const d = R * c;
 
-                if (d <= 50) {
+                if (d <= radius) {
                     const penalty = -30;
                     score += penalty;
-                    reasons.push(`Event Conflict: ${event.name} (${Math.round(d)}km)`);
-                    breakdown.push({ label: 'Event Conflict', value: penalty });
-                    // Only apply once per day to avoid nuking score completely if multiple events?
-                    // Or accumulate? Let's apply once per conflicting event but maybe cap it?
-                    // For now, let's just break after finding one to warn the user.
+                    reasons.push(t('reason.conflict', { name: event.name, distance: Math.round(d) }));
+                    conflicts.push({
+                        name: event.name,
+                        url: event.url,
+                        distance: d
+                    });
+                    breakdown.push({ label: t('breakdown.conflict'), value: penalty });
+
+                    // We only apply one penalty per day, but we might want to list all?
+                    // For now, break after first conflict to avoid score nuking.
                     break;
                 }
             }
@@ -244,34 +257,34 @@ export function calculateMonthScores(
                 // Negative: Crowds, closed roads, etc.
                 const penalty = -30;
                 score += penalty;
-                reasons.push(`Holiday (Negative Impact): ${holiday!.name}`);
-                breakdown.push({ label: `Holiday (${holiday!.name})`, value: penalty });
+                reasons.push(t('reason.holiday.negative', { name: holiday!.name }));
+                breakdown.push({ label: t('breakdown.holiday', { name: holiday!.name }), value: penalty });
             } else {
                 // Positive: Day off, good for race
                 // No penalty, effectively treats as weekend
-                reasons.push(`Holiday: ${holiday!.name}`);
-                breakdown.push({ label: `Holiday (${holiday!.name})`, value: 0 });
+                reasons.push(t('reason.holiday', { name: holiday!.name }));
+                breakdown.push({ label: t('breakdown.holiday', { name: holiday!.name }), value: 0 });
             }
         } else if (isWeekend) {
             if (!constraints.allowWeekends) {
                 const penalty = -100;
                 score = 0; // Hard fail
-                reasons.push("Weekend (Not allowed)");
-                breakdown.push({ label: 'Weekend Not Allowed', value: penalty });
+                reasons.push(t('reason.weekend.notAllowed'));
+                breakdown.push({ label: t('breakdown.weekend'), value: penalty });
             }
         } else {
             // It's a weekday
             if (!constraints.allowWeekdays) {
                 const penalty = -50;
                 score += penalty;
-                reasons.push("Weekday (Preferred Weekend)");
+                reasons.push(t('reason.weekday.preferred'));
 
                 // If strictly not allowed (e.g. checkbox off)
                 const strictPenalty = -100;
                 score = 0;
                 reasons.pop(); // remove "Weekday (Preferred Weekend)"
-                reasons.push("Weekday (Not allowed)");
-                breakdown.push({ label: 'Weekday Not Allowed', value: strictPenalty });
+                reasons.push(t('reason.weekday.notAllowed'));
+                breakdown.push({ label: t('breakdown.weekday'), value: strictPenalty });
             } else {
                 // Weekdays are allowed
                 // Maybe a small penalty vs weekends? Or equal?
@@ -321,17 +334,17 @@ export function calculateMonthScores(
             const darknessHours = darknessMinutes / 60;
             if (darknessHours > 0.5) {
                 // Modified: Append specific "Headlamp required" note
-                reasons.push(`${formatDuration(darknessHours)} Darkness (Headlamp required)`);
-                breakdown.push({ label: 'Darkness Hours', value: 0 });
+                reasons.push(t('reason.darkness.headlamp', { duration: formatDuration(darknessHours) }));
+                breakdown.push({ label: t('breakdown.darkness'), value: 0 });
             } else {
                 // For very short darkness (e.g. < 30m), maybe just "Twilight"? 
                 // Sticking to user request for "Headlamp required" if notable night hours.
                 // Let's treat >.5h as the threshold for the note.
                 // If less, maybe just "Low light" or ignore.
-                breakdown.push({ label: 'Darkness Hours', value: 0 });
+                breakdown.push({ label: t('breakdown.darkness'), value: 0 });
             }
         } else {
-            breakdown.push({ label: 'Darkness Hours', value: 0 });
+            breakdown.push({ label: t('breakdown.darkness'), value: 0 });
         }
 
         // 5. Weather check (Historical)
@@ -351,7 +364,7 @@ export function calculateMonthScores(
                 // const effectiveTemp = (humidity > 70) ? temp + 3 : temp; // Unused in new logic, removed to fix lint.
 
                 let tempPenalty = 0;
-                let tempLabel = 'Ideal Temp';
+                let tempLabel = t('reason.temp.ideal', { temp: temp.toFixed(1) });
                 let windPenalty = 0; // Lifted scope
 
                 // --- PERSONA BASED LOGIC ---
@@ -365,38 +378,38 @@ export function calculateMonthScores(
                     // Very Hot > 25
                     if (temp >= 5 && temp <= 12) {
                         tempPenalty = 0;
-                        tempLabel = `Ideal Temp (${temp.toFixed(1)}°C)`;
+                        tempLabel = t('reason.temp.ideal', { temp: temp.toFixed(1) });
                     } else if (temp > 12) {
                         const limitWarm = (humidity > 70) ? 15 : 18;
                         const limitHot = (humidity > 70) ? 22 : 25;
 
                         if (temp <= limitWarm) {
                             tempPenalty = -10;
-                            tempLabel = `Warm (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.warm', { temp: temp.toFixed(1) });
                         } else if (temp <= limitHot) {
                             tempPenalty = -20;
-                            tempLabel = (humidity > 70) ? `Humid & Hot (${temp.toFixed(1)}°C)` : `Hot (${temp.toFixed(1)}°C)`;
+                            tempLabel = (humidity > 70) ? t('reason.temp.humidHot', { temp: temp.toFixed(1) }) : t('reason.temp.hot', { temp: temp.toFixed(1) });
                         } else {
                             tempPenalty = -30;
-                            tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.veryHot', { temp: temp.toFixed(1) });
                         }
                     } else {
                         // Cold side (stays same for now for competition)
                         const isWindy = wind > 20;
                         if (temp >= 0) {
                             tempPenalty = -10;
-                            tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
-                            if (isWindy) { windPenalty = -10; tempLabel += ' + Windchill'; }
+                            tempLabel = t('reason.temp.chilly', { temp: temp.toFixed(1) });
+                            if (isWindy) { windPenalty = -10; tempLabel += t('reason.windchill'); }
                         } else if (temp >= -5) {
                             tempPenalty = -20;
-                            tempLabel = `Freezing (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.freezing', { temp: temp.toFixed(1) });
                             if (isWindy) { // Fix: windPenalty logic inside block
                                 windPenalty = -15;
-                                tempLabel += ' + Severe Windchill';
+                                tempLabel += t('reason.severeWindchill');
                             }
                         } else {
                             tempPenalty = -30;
-                            tempLabel = `Deep Freeze (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.deepFreeze', { temp: temp.toFixed(1) });
                         }
                     }
                 } else {
@@ -408,35 +421,35 @@ export function calculateMonthScores(
 
                     if (temp >= 15 && temp <= 22) { // Expanding slightly to 22 as "nice warm"
                         tempPenalty = 0;
-                        tempLabel = `Ideal Experience Temp (${temp.toFixed(1)}°C)`;
+                        tempLabel = t('reason.temp.expIdeal', { temp: temp.toFixed(1) });
                     } else if (temp > 22) {
                         // const limitHot = 28; // Unused, removed.
 
                         if (temp <= 26) {
                             tempPenalty = -10;
-                            tempLabel = `Warm (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.warm', { temp: temp.toFixed(1) });
                         } else {
                             tempPenalty = -30;
-                            tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.veryHot', { temp: temp.toFixed(1) });
                         }
                     } else {
                         // Cold Side
                         if (temp >= 10 && temp < 15) {
                             tempPenalty = -10;
-                            tempLabel = `Cool (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.cool', { temp: temp.toFixed(1) });
                         } else if (temp >= 5 && temp < 10) {
                             tempPenalty = -20;
-                            tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.temp.chilly', { temp: temp.toFixed(1) });
                         } else {
                             tempPenalty = -40; // Experience hikers hate freezing
-                            tempLabel = `Too Cold (${temp.toFixed(1)}°C)`;
+                            tempLabel = t('reason.tooCold', { temp: temp.toFixed(1) });
                         }
                     }
 
                     // Apply wind penalty for experience mode
                     if (temp < 15 && wind > 20) {
                         windPenalty = -10;
-                        tempLabel += ' + Wind';
+                        tempLabel += t('reason.wind');
                     }
                 }
 
@@ -457,18 +470,18 @@ export function calculateMonthScores(
                 if (tempSwing > 15) {
                     const stabilityPenalty = -15;
                     score += stabilityPenalty;
-                    reasons.push(`High Temp Swing (${tempSwing.toFixed(1)}°C)`);
-                    breakdown.push({ label: 'Temp Stability', value: stabilityPenalty });
+                    reasons.push(t('reason.tempSwing', { swing: tempSwing.toFixed(1) }));
+                    breakdown.push({ label: t('breakdown.stability'), value: stabilityPenalty });
                 } else {
-                    breakdown.push({ label: 'Temp Stability', value: 0 });
+                    breakdown.push({ label: t('breakdown.stability'), value: 0 });
                 }
 
                 // Rain Risk Analysis (Probability)
                 if (dayWeather.rainProbability > 50) {
                     const penalty = -40;
                     score += penalty;
-                    reasons.push(`High Rain Risk (${Math.round(dayWeather.rainProbability)}%)`);
-                    breakdown.push({ label: 'High Rain Risk', value: penalty });
+                    reasons.push(t('reason.rainRisk.high', { prob: Math.round(dayWeather.rainProbability) }));
+                    breakdown.push({ label: t('breakdown.rain'), value: penalty });
                 }
 
                 // Acclimatization Risk (Seasonality Heuristic)
@@ -480,8 +493,8 @@ export function calculateMonthScores(
                 if (month >= 3 && month <= 5) { // Apr, May, Jun
                     if (temp > 15) {
                         score -= 10;
-                        reasons.push('Acclimatization Risk (Sudden Heat)');
-                        breakdown.push({ label: 'Heat Shock Risk', value: -10 });
+                        reasons.push(t('reason.accum.heat'));
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
                     }
                 }
 
@@ -489,28 +502,28 @@ export function calculateMonthScores(
                 if (month >= 8 && month <= 10) { // Sep, Oct, Nov
                     if (temp < 5) {
                         score -= 10;
-                        reasons.push('Acclimatization Risk (Sudden Cold)');
-                        breakdown.push({ label: 'Cold Shock Risk', value: -10 });
+                        reasons.push(t('reason.accum.cold'));
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
                     } else {
-                        breakdown.push({ label: 'Cold Shock Risk', value: 0 });
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
                     }
                 } else {
-                    breakdown.push({ label: 'Cold Shock Risk', value: 0 });
+                    breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
                 }
 
                 // Mud / Trail Conditions Analysis
                 if (dayWeather.mudIndex > 15) {
                     const penalty = -30;
                     score += penalty;
-                    reasons.push(`Very Muddy Trails (Index: ${dayWeather.mudIndex.toFixed(1)})`);
-                    breakdown.push({ label: 'Very Muddy', value: penalty });
+                    reasons.push(t('reason.mud.very', { index: dayWeather.mudIndex.toFixed(1) }));
+                    breakdown.push({ label: t('breakdown.mud'), value: penalty });
                 } else if (dayWeather.mudIndex > 5) {
                     const penalty = -10;
                     score += penalty;
-                    reasons.push(`Muddy Trails`);
-                    breakdown.push({ label: 'Muddy', value: penalty });
+                    reasons.push(t('reason.mud'));
+                    breakdown.push({ label: t('breakdown.mud'), value: penalty });
                 } else {
-                    breakdown.push({ label: 'Muddy', value: 0 });
+                    breakdown.push({ label: t('breakdown.mud'), value: 0 });
                 }
             }
         }
@@ -531,6 +544,7 @@ export function calculateMonthScores(
         scores.push({
             date: currentDate,
             score,
+            conflicts,
             reasons,
             breakdown,
             status,

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { EventConstraints, DayScore } from '../lib/scoring'; // Fix imports
+import { useLanguage } from '../context/LanguageContext';
+import type { EventConstraints, DayScore } from '../lib/scoring';
 import { fetchMonthHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
 import { calculateMonthScores } from '../lib/scoring';
 
 export function useAnalysis(constraints: EventConstraints, conflictingEvents: any[] = []) {
+    const { t } = useLanguage();
     const [scores, setScores] = useState<DayScore[]>([]);
     const [loading, setLoading] = useState(false);
     const [weatherData, setWeatherData] = useState<Record<string, WeatherStats>>({});
@@ -35,7 +37,7 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
             setWeatherData(weather);
 
             // 3. Run Scoring (Sync)
-            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, weather, conflictingEvents);
+            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, t, weather, conflictingEvents);
             setScores(results);
             setLoading(false);
         }
@@ -59,6 +61,7 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         constraints.considerHolidays,
         constraints.persona,
         constraints.checkConflictingEvents,
+        constraints.conflictRadius,
         conflictingEvents
     ]);
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { searchLocation, type GeoLocation } from '../../lib/geocoding';
 import { Search, MapPin } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LocationSearchProps {
     initialName?: string;
@@ -8,6 +9,7 @@ interface LocationSearchProps {
 }
 
 export function LocationSearch({ initialName = '', onLocationSelect }: LocationSearchProps) {
+    const { t } = useLanguage();
     const [query, setQuery] = useState(initialName);
     const [results, setResults] = useState<GeoLocation[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -57,13 +59,13 @@ export function LocationSearch({ initialName = '', onLocationSelect }: LocationS
 
     return (
         <div className="relative" ref={wrapperRef}>
-            <label className="text-sm font-medium text-gray-600 block mb-2">Location</label>
+            <label className="text-sm font-medium text-gray-600 block mb-2">{t('search.label')}</label>
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                     type="text"
                     className="w-full pl-9 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Search city (e.g. Bayreuth)..."
+                    placeholder={t('search.placeholder')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}

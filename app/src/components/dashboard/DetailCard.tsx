@@ -1,32 +1,40 @@
 import { Info } from 'lucide-react';
 import type { DayScore } from '../../lib/scoring';
 import { format } from 'date-fns';
+import { de, enUS } from 'date-fns/locale';
 import { formatDuration } from '../../lib/utils';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface DetailCardProps {
     dayScore: DayScore | null;
 }
 
 export function DetailCard({ dayScore }: DetailCardProps) {
+    const { t, language } = useLanguage();
     if (!dayScore) return null;
+
+    const dateLocale = language === 'de' ? de : enUS;
 
     return (
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-6">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">{format(dayScore.date, 'EEEE, d. MMMM')}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">{format(dayScore.date, 'EEEE, d. MMMM', { locale: dateLocale })}</h2>
                     <div className="group relative inline-block">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide mt-1 cursor-help
                     ${dayScore.status === 'green' ? 'bg-emerald-100 text-emerald-700' : ''}
                     ${dayScore.status === 'yellow' ? 'bg-amber-100 text-amber-700' : ''}
                     ${dayScore.status === 'red' ? 'bg-rose-100 text-rose-700' : ''}
                  `}>
-                            {dayScore.status} Match ({Math.round(dayScore.score)}%)
+                            {dayScore.status === 'green' && t('detail.status.green')}
+                            {dayScore.status === 'yellow' && t('detail.status.yellow')}
+                            {dayScore.status === 'red' && t('detail.status.red')}
+                            {' '}{t('detail.match')} ({Math.round(dayScore.score)}%)
                             <Info className="w-3 h-3" />
                         </span>
                         {/* Breakdown Tooltip */}
                         <div className="absolute left-0 top-full mt-2 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                            <div className="text-xs font-semibold mb-2 text-gray-300 uppercase tracking-wider border-b border-white/20 pb-1">Score Formula</div>
+                            <div className="text-xs font-semibold mb-2 text-gray-300 uppercase tracking-wider border-b border-white/20 pb-1">{t('detail.scoreFormula')}</div>
                             <div className="space-y-1.5">
                                 {dayScore.breakdown?.map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center text-xs">
@@ -56,19 +64,42 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                 <div className="space-y-4">
                     {/* Reasons */}
                     <div className="space-y-2">
-                        <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wider">Analysis</h3>
+                        <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wider">{t('detail.summary')}</h3>
                         {dayScore.reasons.length > 0 ? (
                             <ul className="space-y-1">
-                                {dayScore.reasons.map((reason, i) => (
-                                    <li key={i} className="text-sm font-medium text-gray-700 flex items-start gap-2">
-                                        <span className="text-red-500">•</span>
-                                        {reason}
-                                    </li>
-                                ))}
+                                {dayScore.reasons.map((reason, i) => {
+                                    // Check if this reason corresponds to a conflict with a URL
+                                    // Reason format: "Event Conflict: NAME (DISTkm)"
+                                    const conflict = dayScore.conflicts?.find(c =>
+                                        reason.includes(c.name)
+                                    );
+
+                                    return (
+                                        <li key={i} className="text-sm font-medium text-gray-700 flex items-start gap-2">
+                                            <span className="text-red-500">•</span>
+                                            {conflict && conflict.url ? (
+                                                <span className="flex items-center gap-1">
+                                                    {t('detail.conflictPrefix')}
+                                                    <a
+                                                        href={conflict.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:underline hover:text-blue-800 transition-colors"
+                                                    >
+                                                        {conflict.name}
+                                                    </a>
+                                                    <span className="text-gray-500">({Math.round(conflict.distance)}km)</span>
+                                                </span>
+                                            ) : (
+                                                reason
+                                            )}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         ) : (
                             <div className="text-sm text-green-600 font-medium flex items-center gap-2">
-                                <span>✓</span> Perfect conditions
+                                <span>✓</span> {t('detail.perfect')}
                             </div>
                         )}
                     </div>
@@ -81,7 +112,7 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                         <div className="col-span-2">
                             <div className="flex flex-col gap-1 w-full">
                                 <div className="flex justify-between items-end text-xs text-gray-400 mb-1">
-                                    <span>Daylight & Race Time ({formatDuration(dayScore.details.daylightHours)} daylight)</span>
+                                    <span>{t('detail.daylight.title')} ({formatDuration(dayScore.details.daylightHours)} {t('detail.daylight')})</span>
                                 </div>
                                 <div className="relative w-full h-12 border border-gray-100 rounded-md overflow-hidden bg-slate-900">
                                     {(() => {
@@ -182,8 +213,8 @@ export function DetailCard({ dayScore }: DetailCardProps) {
 
                         {/* 2. Training Prep */}
                         <div>
-                            <div className="text-xs text-gray-400 mb-1">Training Prep</div>
-                            <div className="font-semibold text-gray-800">{dayScore.details.trainingWeeksAvailable} weeks</div>
+                            <div className="text-xs text-gray-400 mb-1">{t('detail.trainingPrep')}</div>
+                            <div className="font-semibold text-gray-800">{dayScore.details.trainingWeeksAvailable} {t('detail.weeks')}</div>
                         </div>
 
                         {/* 3. Weather Stats (if available) - Inside Grid */}
@@ -192,29 +223,29 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                 {/* Temp */}
                                 <div>
                                     <div className="flex items-center gap-1 group relative cursor-help mb-1">
-                                        <div className="text-xs text-gray-400">Avg Temp (High/Low)</div>
+                                        <div className="text-xs text-gray-400">{t('detail.avgTemp')}</div>
                                         <Info className="w-3 h-3 text-gray-400" />
                                         <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
                                             <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                                                {dayScore.details.persona === 'competition' ? 'Competition Range' : 'Experience Range'}
+                                                {dayScore.details.persona === 'competition' ? t('config.persona.race') : t('config.persona.experience')}
                                             </div>
                                             <p className="text-[10px] leading-relaxed text-gray-300 mb-2">
                                                 {dayScore.details.persona === 'competition'
-                                                    ? 'Optimized for race performance. Cooler is better.'
-                                                    : 'Optimized for comfort. Warmth is preferred.'}
+                                                    ? t('config.persona.race.temp.desc')
+                                                    : t('config.persona.experience.temp.desc')}
                                             </p>
 
                                             {dayScore.details.persona === 'competition' ? (
                                                 <div className="space-y-1">
-                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">Acceptable</span><span>0°C - 18°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">Penalty</span><span>&gt; 12°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.race.temp.ideal')}</span><span>5°C - 12°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>0°C - 18°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.race.temp.penalty')}</span><span>&gt; 12°C</span></div>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-1">
-                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">Ideal</span><span>15°C - 20°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">Acceptable</span><span>10°C - 25°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">Penalty</span><span>&lt; 15°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.experience.temp.ideal')}</span><span>15°C - 20°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>10°C - 25°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.experience.temp.penalty')}</span><span>&lt; 15°C</span></div>
                                                 </div>
                                             )}
                                         </div>
@@ -226,19 +257,19 @@ export function DetailCard({ dayScore }: DetailCardProps) {
 
                                 {/* Humidity */}
                                 <div>
-                                    <div className="text-xs text-gray-400 mb-1">Avg Humidity</div>
+                                    <div className="text-xs text-gray-400 mb-1">{t('detail.avgHumidity')}</div>
                                     <div className="font-semibold text-gray-800">{Math.round(dayScore.details.weather.avgHumidity)}%</div>
                                 </div>
 
                                 {/* Wind */}
                                 <div>
-                                    <div className="text-xs text-gray-400 mb-1">Avg Max Gusts</div>
+                                    <div className="text-xs text-gray-400 mb-1">{t('detail.wind')}</div>
                                     <div className="font-semibold text-gray-800">{dayScore.details.weather.maxWindSpeed.toFixed(1)} km/h</div>
                                 </div>
 
                                 {/* Rain */}
                                 <div>
-                                    <div className="text-xs text-gray-400 mb-1">Rain Risk</div>
+                                    <div className="text-xs text-gray-400 mb-1">{t('detail.rainRisk')}</div>
                                     <div className={`font-semibold ${dayScore.details.weather.rainProbability > 20 ? 'text-amber-600' : 'text-gray-800'}`}>
                                         {Math.round(dayScore.details.weather.rainProbability)}%
                                     </div>
@@ -248,25 +279,25 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                 <div className="col-span-2">
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-1 group relative cursor-help">
-                                            <span className="text-xs text-gray-400">Trail Condition</span>
+                                            <span className="text-xs text-gray-400">{t('detail.trailCondition')}</span>
                                             <Info className="w-3 h-3 text-gray-400" />
                                             <div className="absolute left-0 bottom-full mb-2 w-48 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                                                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Mud Index</div>
-                                                <p className="text-[10px] leading-relaxed text-gray-300">Estimated soil saturation based on trailing rainfall.</p>
+                                                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t('detail.mudIndex')}</div>
+                                                <p className="text-[10px] leading-relaxed text-gray-300">{t('detail.mudIndex.desc')}</p>
                                                 <div className="mt-2 pt-2 border-t border-white/20 flex justify-between items-center">
-                                                    <span className="text-[10px] text-gray-400">Index Score</span>
+                                                    <span className="text-[10px] text-gray-400">{t('detail.indexScore')}</span>
                                                     <span className="text-xs font-mono font-medium text-emerald-400">{dayScore.details.weather.mudIndex.toFixed(1)}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         {(() => {
                                             const mud = dayScore.details.weather.mudIndex;
-                                            let label = 'Perfect';
+                                            let label = t('detail.mud.perfect');
                                             let color = 'text-emerald-600';
-                                            if (mud > 15) { label = 'Very Muddy'; color = 'text-red-600'; }
-                                            else if (mud > 8) { label = 'Muddy'; color = 'text-orange-600'; }
-                                            else if (mud > 5) { label = 'Damp'; color = 'text-yellow-600'; }
-                                            else if (mud > 2) { label = 'Good'; color = 'text-emerald-500'; }
+                                            if (mud > 15) { label = t('detail.mud.veryMuddy'); color = 'text-red-600'; }
+                                            else if (mud > 8) { label = t('detail.mud.muddy'); color = 'text-orange-600'; }
+                                            else if (mud > 5) { label = t('detail.mud.damp'); color = 'text-yellow-600'; }
+                                            else if (mud > 2) { label = t('detail.mud.good'); color = 'text-emerald-500'; }
                                             return <div className={`text-xs font-bold ${color}`}>{label}</div>;
                                         })()}
                                     </div>
@@ -302,12 +333,12 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                 {dayScore.details.weather.history && (
                                     <div className="col-span-2 mt-6 pt-6 border-t border-gray-100">
                                         <div className="flex justify-between items-end mb-4">
-                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Historical Context (10y)</h4>
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('detail.historyContext')}</h4>
                                             <div className="flex gap-4">
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></div><span className="text-[10px] text-gray-500">Temp Range</span></div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-blue-400 rounded-sm"></div><span className="text-[10px] text-gray-500">Rain</span></div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-teal-100 border border-teal-200"></div><span className="text-[10px] text-gray-500">Hum</span></div>
-                                                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-purple-400"></div><span className="text-[10px] text-gray-500">Gusts</span></div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></div><span className="text-[10px] text-gray-500">{t('detail.graph.temp')}</span></div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-blue-400 rounded-sm"></div><span className="text-[10px] text-gray-500">{t('detail.graph.rain')}</span></div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-teal-100 border border-teal-200"></div><span className="text-[10px] text-gray-500">{t('detail.graph.humidity')}</span></div>
+                                                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-purple-400"></div><span className="text-[10px] text-gray-500">{t('detail.graph.gusts')}</span></div>
                                             </div>
                                         </div>
 
@@ -503,16 +534,16 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                                                             {dayScore.date.getFullYear() - 10 + i}
                                                                         </div>
                                                                         <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-right">
-                                                                            <span className="text-left text-orange-300">Temp</span>
+                                                                            <span className="text-left text-orange-300">{t('detail.tooltip.temp')}</span>
                                                                             <span>{history.temps[i].toFixed(1)}° / {history.tempsMin?.[i]?.toFixed(1)}°</span>
 
-                                                                            <span className="text-left text-blue-300">Rain</span>
+                                                                            <span className="text-left text-blue-300">{t('detail.tooltip.rain')}</span>
                                                                             <span>{history.rain[i].toFixed(1)}mm</span>
 
-                                                                            <span className="text-left text-teal-300">Hum</span>
+                                                                            <span className="text-left text-teal-300">{t('detail.tooltip.hum')}</span>
                                                                             <span>{history.humidities?.[i] ?? '-'}%</span>
 
-                                                                            <span className="text-left text-purple-300">Gusts</span>
+                                                                            <span className="text-left text-purple-300">{t('detail.tooltip.wind')}</span>
                                                                             <span>{history.winds?.[i]?.toFixed(1) ?? '-'}km/h</span>
                                                                         </div>
                                                                     </div>
