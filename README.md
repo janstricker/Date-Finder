@@ -9,13 +9,22 @@ Built on the philosophy *"Wandern ist Taktik"* ("Walking is Strategy"), FichtelU
 The application provides a "Vibe Coding" dashboard that analyzes every day of a selected month to calculate a suitability score (0-100).
 
 ### Key Features
-*   **📍 Location Intelligence**: Search for any city or region to automatically retrieve coordinates (via OpenMeteo Geocoding).
-*   **☀️ Historical Weather Analysis**: Fetches 5-year historical averages for Temperature and Precipitation. The scoring logic penalizes dates that are statistically too hot (>25°C), too cold (<5°C), or rainy.
-*   **🌅 Advanced Daylight Logic**: Calculates exact Sunrise and Sunset times based on your specific **Race Start Time** and **Duration**. It warns you if your event will start or end in the dark—essential for safety planning without expensive lighting gear.
-*   **🎉 Holiday Integration**: Automatically detects:
+*   **🏃 Runability Score (0-100)**: A proprietary "Vibe Coding" algorithm that evaluates a date's suitability for running. It processes:
+    *   **Temperature Comfort**: Penalties for extreme heat (>20°C) or freezing cold (<0°C).
+    *   **Precipitation Impact**: Heavy penalties for rain, especially during race hours.
+    *   **Daylight Safety**: Scores based on how much of the race happens in daylight vs. civil twilight vs. night.
+    *   **Wind Factor**: (Coming soon: Wind chill adjustments).
+*   **📊 "Vibe Coding" Dashboard**: A visual Deep Dive into any selected day:
+    *   **Interactive Charts**: 4-Metric view (Temp, Rain, Wind, Humidity) with 3-hour granularity.
+    *   **Daylight visualizer**: See exactly when the sun rises/sets relative to your race timeline.
+*   **📍 Location Intelligence**:
+    *   **Smart Search**: Type any city (e.g., "Bayreuth", "Chamonix") to auto-fetch coordinates.
+    *   **Timezone Aware**: All times are adjusted to the local timezone of the race location.
+*   **☀️ Historical Weather Analysis**: Fetches 5-year historical averages from OpenMeteo for reliable forecasting of seasonal trends.
+*   **🎉 Holiday Integration**:
     *   **Public Holidays**: Treated as positive days (participants are free).
     *   **School Holidays**: Displayed for planning context (families might be away).
-    *   **State Selection**: Configurable for all German states (e.g., Bayern, Berlin).
+    *   **State Selection**: Configurable for all German states.
 *   **🚫 Conflict Management**: Simple UI to manually block dates, ensuring you don't clash with major adjacent events (like the Berlin Marathon).
 
 ## Technical Stack

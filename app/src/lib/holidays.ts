@@ -1,13 +1,33 @@
 
+/**
+ * @file holidays.ts
+ * @description Fetches public and school holidays for a specific region in Germany using the OpenHolidays API.
+ * This data is used to adjust the Runability Score (e.g., crowding vs free time).
+ */
+
+/**
+ * Standardized holiday object for consumption by the scoring logic.
+ */
 export interface Holiday {
-    date: string; // YYYY-MM-DD
+    /** ISO Date string (YYYY-MM-DD) */
+    date: string;
+    /** Localized name of the holiday (e.g. "Ostermontag") */
     name: string;
+    /** Type to distinguish between legal holidays and school breaks */
     type: 'public' | 'school';
 }
 
 // Simple in-memory cache
 const cache: Record<string, Holiday[]> = {};
 
+/**
+ * Fetches all holidays (Public + School) for a given year and state.
+ * Results are cached in-memory to prevent redundant network requests during repeated scoring calls.
+ * 
+ * @param year - The target year (e.g. 2025)
+ * @param stateCode - ISO-3166-2 state code suffix (e.g. "BY" for Bavaria). Defaults to "BY".
+ * @returns A flat list of Holiday objects, where ranges (like school breaks) are expanded into individual days.
+ */
 export async function fetchHolidays(year: number, stateCode: string = 'BY'): Promise<Holiday[]> {
     const cacheKey = `${year}-${stateCode}`;
     if (cache[cacheKey]) {

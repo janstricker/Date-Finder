@@ -195,13 +195,28 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                         <div className="text-xs text-gray-400">Avg Temp (High/Low)</div>
                                         <Info className="w-3 h-3 text-gray-400" />
                                         <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                                            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Ultra Running Temp</div>
-                                            <p className="text-[10px] leading-relaxed text-gray-300 mb-2">Optimal temperature range for 50k+ Ultra distances.</p>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-[10px]"><span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span></div>
-                                                <div className="flex justify-between text-[10px]"><span className="text-yellow-400">Acceptable</span><span>0°C - 18°C</span></div>
-                                                <div className="flex justify-between text-[10px]"><span className="text-rose-400">Critical</span><span>&gt; 25°C or &lt; -5°C</span></div>
+                                            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                                {dayScore.details.persona === 'competition' ? 'Competition Range' : 'Experience Range'}
                                             </div>
+                                            <p className="text-[10px] leading-relaxed text-gray-300 mb-2">
+                                                {dayScore.details.persona === 'competition'
+                                                    ? 'Optimized for race performance. Cooler is better.'
+                                                    : 'Optimized for comfort. Warmth is preferred.'}
+                                            </p>
+
+                                            {dayScore.details.persona === 'competition' ? (
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">Acceptable</span><span>0°C - 18°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">Penalty</span><span>&gt; 12°C</span></div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">Ideal</span><span>15°C - 20°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">Acceptable</span><span>10°C - 25°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">Penalty</span><span>&lt; 15°C</span></div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="font-semibold text-gray-800">
@@ -217,7 +232,7 @@ export function DetailCard({ dayScore }: DetailCardProps) {
 
                                 {/* Wind */}
                                 <div>
-                                    <div className="text-xs text-gray-400 mb-1">Avg Max Wind</div>
+                                    <div className="text-xs text-gray-400 mb-1">Avg Max Gusts</div>
                                     <div className="font-semibold text-gray-800">{dayScore.details.weather.maxWindSpeed.toFixed(1)} km/h</div>
                                 </div>
 
@@ -292,7 +307,7 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></div><span className="text-[10px] text-gray-500">Temp Range</span></div>
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-blue-400 rounded-sm"></div><span className="text-[10px] text-gray-500">Rain</span></div>
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-teal-100 border border-teal-200"></div><span className="text-[10px] text-gray-500">Hum</span></div>
-                                                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-purple-400"></div><span className="text-[10px] text-gray-500">Wind</span></div>
+                                                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-purple-400"></div><span className="text-[10px] text-gray-500">Gusts</span></div>
                                             </div>
                                         </div>
 
@@ -497,7 +512,7 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                                                                             <span className="text-left text-teal-300">Hum</span>
                                                                             <span>{history.humidities?.[i] ?? '-'}%</span>
 
-                                                                            <span className="text-left text-purple-300">Wind</span>
+                                                                            <span className="text-left text-purple-300">Gusts</span>
                                                                             <span>{history.winds?.[i]?.toFixed(1) ?? '-'}km/h</span>
                                                                         </div>
                                                                     </div>

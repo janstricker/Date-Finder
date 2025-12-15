@@ -1,37 +1,72 @@
 
+/**
+ * @file scoring.ts
+ * @description Core logic for the "Vibe Coding" algorithm. This module evaluates every day of a target month
+ * against a set of user-defined constraints and historical weather data to produce a "Runability Score".
+ */
 import SunCalc from 'suncalc';
 import { differenceInWeeks } from 'date-fns';
 import type { WeatherStats } from './weather';
 
+/**
+ * User-configurable constraints and preferences for the event.
+ */
 export interface EventConstraints {
-    targetMonth: Date; // The first day of the target month
+    /** The first day of the target month (e.g. 2025-09-01) */
+    targetMonth: Date;
+    /** Geographic location for daylight and weather lookups */
     location: {
         lat: number;
         lng: number;
         name?: string;
     };
-    stateCode: string; // "BY", "BE", etc.
+    /** ISO-3166-2 state code for holiday lookup (e.g. "DE-BY") */
+    stateCode: string;
+    /** Minimum weeks required for training before the event */
     minTrainingWeeks: number;
     // minDaylightHours?: number; // Deprecated by specific timing
-    raceStartTime: string; // "09:00"
-    raceDurationHours: number; // e.g. 6.5
-    distance: number; // in km
-    blockedDates: string[]; // ["2026-09-27"]
-    // New Configs
+    /** Scheduled start time of the race (HH:MM) */
+    raceStartTime: string;
+    /** Expected duration of the race in hours */
+    raceDurationHours: number;
+    /** Race distance in km (informational for now, used for "Ultra" context) */
+    distance: number;
+    /** ISO Dates manually blocked by the user */
+    blockedDates: string[];
+
+    // --- Boolean Toggles ---
+    /** If true, holidays are treated as negative (crowds) instead of positive (free time) */
     negativeHolidayImpact: boolean;
+    /** If true, penalizes dates that don't allow enough training weeks */
     incorporateTrainingTime: boolean;
+    /** Allow Saturdays and Sundays */
     allowWeekends: boolean;
+    /** Allow Mon-Fri */
     allowWeekdays: boolean;
+    /** Check for public holidays */
     considerHolidays: boolean;
+
+    /** Scoring Mode / Persona */
+    persona: 'competition' | 'experience';
 }
 
+/**
+ * The result object for a single evaluated day.
+ */
 export interface DayScore {
+    /** The actual calendar date evaluated */
     date: Date;
-    score: number; // 0-100
-    reasons: string[]; // "Too dark", "Conflict with Berlin Marathon"
-    breakdown: { label: string; value: number }[]; // [{ label: "Base Score", value: 100 }, { label: "Holiday", value: -30 }]
+    /** Final calculated score (0-100), where 100 is ideal */
+    score: number;
+    /** Human-readable strings explaining penalties or specific conditions */
+    reasons: string[];
+    /** Detailed breakdown of score components for visualization */
+    breakdown: { label: string; value: number }[];
+    /** Traffic light status based on score thresholds */
     status: 'green' | 'yellow' | 'red';
+    /** Raw data used for the specific day's calculation */
     details: {
+        /** Total hours between sunrise and sunset */
         daylightHours: number;
         dawn: Date;
         sunrise: Date;
@@ -43,6 +78,7 @@ export interface DayScore {
         holiday?: string; // Name of holiday if any
         raceStartTime: string;
         raceDuration: number;
+        persona: 'competition' | 'experience';
     };
 }
 
@@ -52,6 +88,21 @@ import type { Holiday } from './holidays';
 
 import { formatDuration } from './utils';
 
+/**
+ * Calculates a suitability score for every day in the target month.
+ * 
+ * Score Formulation:
+ * - Start with Base Score: 100
+ * - Apply Hard Constraints (Training Time, Manual Blocks, Allowed Days) -> Sets score to 0 on fail.
+ * - Apply Soft Constraints (Holidays) -> Penalties or no impact.
+ * - Apply Daylight Analysis -> Penalties for darkness during race hours.
+ * - Apply Weather Analysis (if data available) -> Penalties for Temp/Rain/Wind/Mud.
+ * 
+ * @param month - The target month to evaluate
+ * @param constraints - User preferences and event specs
+ * @param holidays - List of public/school holidays for the region
+ * @param weatherData - (Optional) Historical weather map
+ */
 export function calculateMonthScores(
     month: Date,
     constraints: EventConstraints,
@@ -84,20 +135,35 @@ export function calculateMonthScores(
 
         // 1. Constraints Check (Blocking) - Ensure we are in the target month
         if (currentDate.getMonth() !== constraints.targetMonth.getMonth()) {
-            // This should ideally not happen if loop is correct, but as a safeguard
             score = 0;
-            // reasons.push("Wrong Month"); // Implicit
         }
 
         // 1. Check Training Time (Optional)
+        // If the user needs X weeks to train, and the date is sooner than that -> Fail.
         const weeksAvailable = differenceInWeeks(currentDate, today);
         if (constraints.incorporateTrainingTime) {
             if (weeksAvailable < constraints.minTrainingWeeks) {
-                // If checking prep time, this is critical
-                const penalty = -100;
-                score = 0;
-                reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
-                breakdown.push({ label: 'Insufficient Training Time', value: penalty });
+                const ratio = Math.max(0, weeksAvailable / constraints.minTrainingWeeks);
+
+                if (ratio < 0.5) {
+                    // Critical Failure (< 50% time)
+                    const penalty = -100;
+                    score = 0;
+                    reasons.push(`Not enough training time (${weeksAvailable} weeks vs ${constraints.minTrainingWeeks} required)`);
+                    breakdown.push({ label: 'Insufficient Training Time (< 50%)', value: penalty });
+                } else {
+                    // Soft Fail (50% - 99% time)
+                    // Linear penalty: -10 pts per 10% missing? 
+                    // Formula: Penalty = (1 - ratio) * 200 => 0.5 ratio -> 100 penalty? Too harsh.
+                    // User wants "visible comparable". 
+                    // Let's do: Penalty = - (1 - ratio) * 100.
+                    // Example: 90% time (ratio 0.9) -> -10 pts.
+                    // Example: 50% time (ratio 0.5) -> -50 pts.
+                    const penalty = Math.round(-(1 - ratio) * 100);
+                    score += penalty;
+                    reasons.push(`Short Training Prep (${Math.round(ratio * 100)}% of recommended)`);
+                    breakdown.push({ label: 'Short Training Prep', value: penalty });
+                }
             }
         }
 
@@ -111,6 +177,10 @@ export function calculateMonthScores(
         }
 
         // 3. Weekend & Holiday Check & Weekdays
+        // Priority Order: Holiday > Weekend > Weekday
+        // We evaluate strictly in this hierarchy to ensure special days (like Holidays) 
+        // aren't accidentally penalized as "Weekdays" if they fall on a Monday, 
+        // or allowed as "Weekends" if holidays are banned.
         const dayOfWeek = currentDate.getDay(); // 0 = Sun, 6 = Sat
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
@@ -169,7 +239,8 @@ export function calculateMonthScores(
         // 4. Daylight Analysis
         // Race Start: constraints.raceStartTime (e.g. "07:00")
         // Duration: constraints.raceDurationHours (e.g. 12)
-        // We need to calculate how much of the race is in DARKNESS.
+        // We calculate the overlap between the Race Window [Start, End] and Daylight Window [Sunrise, Sunset].
+        // Any race time outside sunlight is counted as "Darkness".
 
         // Parse start time to get hours relative to currentDate
         const [startH, startM] = constraints.raceStartTime.split(':').map(Number);
@@ -179,7 +250,7 @@ export function calculateMonthScores(
         const raceEnd = new Date(raceStart);
         raceEnd.setMinutes(raceEnd.getMinutes() + constraints.raceDurationHours * 60);
 
-        // Get Sun times
+        // Get Sun times via SunCalc
         const times = SunCalc.getTimes(currentDate, constraints.location.lat, constraints.location.lng);
         // "nightEnd" ~ sunrise ends (civil dawn or similar, usually stick to sunrise/sunset for general use)
         // or actually "sunrise" and "sunset".
@@ -205,15 +276,14 @@ export function calculateMonthScores(
         if (darknessMinutes > 0) {
             const darknessHours = darknessMinutes / 60;
             if (darknessHours > 0.5) {
-                // Wait, reviewing previous code... lines 182-183 were commented out.
-                // Ah, line 184 just pushed reason.
-                reasons.push(`${formatDuration(darknessHours)} Night`);
-                // Calculate penalty proportional to hours, e.g. -5 per hour?
-                // For now, sticking to previous behavior (likely implicitly penalizing via other means or just warning)
-                // But let's separate "reason" from "score impact".
-                // If existing logic doesn't penalize, we push 0.
+                // Modified: Append specific "Headlamp required" note
+                reasons.push(`${formatDuration(darknessHours)} Night (Headlamp required)`);
                 breakdown.push({ label: 'Night Hours', value: 0 });
             } else {
+                // For very short darkness (e.g. < 30m), maybe just "Twilight"? 
+                // Sticking to user request for "Headlamp required" if notable night hours.
+                // Let's treat >.5h as the threshold for the note.
+                // If less, maybe just "Low light" or ignore.
                 breakdown.push({ label: 'Night Hours', value: 0 });
             }
         } else {
@@ -221,100 +291,120 @@ export function calculateMonthScores(
         }
 
         // 5. Weather check (Historical)
+        // Checks historical averages for the specific day to predict likely conditions.
+        // Penalties are applied for extreme heat, cold, wind, or rain risk.
         if (weatherData) {
             // Check weather for this specific day (YYYY-MM-DD key)
             const dayWeather = weatherData[dateKey];
 
             if (dayWeather) {
-                // Temp Analysis (Ultra Specific: 50k-100k)
-                // Ideal: 5°C - 12°C
-                // Acceptable: 0°C - 18°C
-                // Poor: > 18°C or < 0°C
-                // Critical: > 25°C or < -5°C
-
+                // Temp Analysis
                 const temp = dayWeather.avgMaxTemp;
                 const humidity = dayWeather.avgHumidity;
                 const wind = dayWeather.maxWindSpeed;
 
-                // Humidity Adjustment: High humidity (>70%) lowers heat tolerance by ~3°C
-                // Effectively, if humid, we treat the temp as 3°C higher for penalty calculation context (Heat Index proxy)
-                const effectiveTemp = (humidity > 70) ? temp + 3 : temp;
+                // Humidity Adjustment
+                // const effectiveTemp = (humidity > 70) ? temp + 3 : temp; // Unused in new logic, removed to fix lint.
 
                 let tempPenalty = 0;
                 let tempLabel = 'Ideal Temp';
+                let windPenalty = 0; // Lifted scope
 
-                if (effectiveTemp >= 5 && effectiveTemp <= 12) {
-                    // Note: using effectiveTemp might shift a 10°C (Ideal) to 13°C (Warm) if humid.
-                    // But humidity usually affects "Feels Like" mainly in heat.
-                    // The requirement says: reduce "Hot" threshold by 3°C.
-                    // So let's stick to the specific thresholds for simplicity and clarity.
-                    // Actually, using effectiveTemp for the check is the cleanest way to "shift thresholds".
-                }
+                // --- PERSONA BASED LOGIC ---
+                const isCompetition = constraints.persona === 'competition';
 
-                // Refined Logic using specific thresholds per plan to avoid over-penalizing ideal range
-                // Use 'temp' for cold checks, 'effectiveTemp' for heat checks?
-                // Let's keep it simple:
-                // >18 is Poor. If humid, >15 is Poor.
-                // >25 is Critical. If humid, >22 is Critical.
+                if (isCompetition) {
+                    // Default Scenarios (Competition)
+                    // Ideal: 5 - 12
+                    // Warm > 12 -> 18
+                    // Hot > 18 -> 25
+                    // Very Hot > 25
+                    if (temp >= 5 && temp <= 12) {
+                        tempPenalty = 0;
+                        tempLabel = `Ideal Temp (${temp.toFixed(1)}°C)`;
+                    } else if (temp > 12) {
+                        const limitWarm = (humidity > 70) ? 15 : 18;
+                        const limitHot = (humidity > 70) ? 22 : 25;
 
-                // Let's re-eval strictly:
-
-                if (temp >= 5 && temp <= 12) {
-                    tempPenalty = 0;
-                    tempLabel = `Ideal Temp (${temp.toFixed(1)}°C)`;
-                } else if (temp > 12) {
-                    // Heat Side
-                    // Check strict thresholds modified by humidity
-                    const limitWarm = (humidity > 70) ? 15 : 18; // Above this is Hot/Poor
-                    const limitHot = (humidity > 70) ? 22 : 25;  // Above this is Critical
-
-                    if (temp <= limitWarm) {
-                        // 12-18 (or 12-15 if humid)
-                        tempPenalty = -10;
-                        tempLabel = `Warm (${temp.toFixed(1)}°C)`;
-                    } else if (temp <= limitHot) {
-                        // 18-25 (or 15-22 if humid)
-                        tempPenalty = -20;
-                        tempLabel = (humidity > 70) ? `Humid & Hot (${temp.toFixed(1)}°C)` : `Hot (${temp.toFixed(1)}°C)`;
+                        if (temp <= limitWarm) {
+                            tempPenalty = -10;
+                            tempLabel = `Warm (${temp.toFixed(1)}°C)`;
+                        } else if (temp <= limitHot) {
+                            tempPenalty = -20;
+                            tempLabel = (humidity > 70) ? `Humid & Hot (${temp.toFixed(1)}°C)` : `Hot (${temp.toFixed(1)}°C)`;
+                        } else {
+                            tempPenalty = -30;
+                            tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
+                        }
                     } else {
-                        // >25 (or >22 if humid)
-                        tempPenalty = -30;
-                        tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
+                        // Cold side (stays same for now for competition)
+                        const isWindy = wind > 20;
+                        if (temp >= 0) {
+                            tempPenalty = -10;
+                            tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
+                            if (isWindy) { windPenalty = -10; tempLabel += ' + Windchill'; }
+                        } else if (temp >= -5) {
+                            tempPenalty = -20;
+                            tempLabel = `Freezing (${temp.toFixed(1)}°C)`;
+                            if (isWindy) { // Fix: windPenalty logic inside block
+                                windPenalty = -15;
+                                tempLabel += ' + Severe Windchill';
+                            }
+                        } else {
+                            tempPenalty = -30;
+                            tempLabel = `Deep Freeze (${temp.toFixed(1)}°C)`;
+                        }
                     }
                 } else {
-                    // Cold Side (< 5)
-                    // Windchill Factor
-                    const isWindy = wind > 20; // 20km/h threshold
-                    let windPenalty = 0;
+                    // EXPERIENCE Mode Scenarios
+                    // Ideal: 15 - 20 (Warmer is better)
+                    // Cool: 10 - 15 (Acceptable)
+                    // Cold: < 10 (Penalty)
+                    // Hot: > 25 (Still bad)
 
-                    if (temp >= 0) {
-                        tempPenalty = -10;
-                        tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
-                        if (isWindy) {
-                            windPenalty = -10;
-                            tempLabel += ' + Windchill';
-                        }
-                    } else if (temp >= -5) {
-                        tempPenalty = -20;
-                        tempLabel = `Freezing (${temp.toFixed(1)}°C)`;
-                        if (isWindy) {
-                            windPenalty = -15; // Stronger windchill penalty in freezing
-                            tempLabel += ' + Severe Windchill';
+                    if (temp >= 15 && temp <= 22) { // Expanding slightly to 22 as "nice warm"
+                        tempPenalty = 0;
+                        tempLabel = `Ideal Experience Temp (${temp.toFixed(1)}°C)`;
+                    } else if (temp > 22) {
+                        // const limitHot = 28; // Unused, removed.
+
+                        if (temp <= 26) {
+                            tempPenalty = -10;
+                            tempLabel = `Warm (${temp.toFixed(1)}°C)`;
+                        } else {
+                            tempPenalty = -30;
+                            tempLabel = `Very Hot (${temp.toFixed(1)}°C)`;
                         }
                     } else {
-                        tempPenalty = -30;
-                        tempLabel = `Deep Freeze (${temp.toFixed(1)}°C)`;
+                        // Cold Side
+                        if (temp >= 10 && temp < 15) {
+                            tempPenalty = -10;
+                            tempLabel = `Cool (${temp.toFixed(1)}°C)`;
+                        } else if (temp >= 5 && temp < 10) {
+                            tempPenalty = -20;
+                            tempLabel = `Chilly (${temp.toFixed(1)}°C)`;
+                        } else {
+                            tempPenalty = -40; // Experience hikers hate freezing
+                            tempLabel = `Too Cold (${temp.toFixed(1)}°C)`;
+                        }
                     }
 
-                    tempPenalty += windPenalty;
+                    // Apply wind penalty for experience mode
+                    if (temp < 15 && wind > 20) {
+                        windPenalty = -10;
+                        tempLabel += ' + Wind';
+                    }
                 }
+
+                // Apply wind penalty
+                tempPenalty += windPenalty;
+
 
                 if (tempPenalty !== 0) {
                     score += tempPenalty;
                     reasons.push(tempLabel);
                     breakdown.push({ label: tempLabel, value: tempPenalty });
                 } else {
-                    // It's ideal, maybe show it in breakdown as +0?
                     breakdown.push({ label: tempLabel, value: 0 });
                 }
 
@@ -382,9 +472,14 @@ export function calculateMonthScores(
         }
 
 
-        // Clamp Score
+        // 6. Final Score Aggregation
+        // Clamp the score to ensure it stays within the 0-100 generic range.
         score = Math.max(0, Math.min(100, score));
 
+        // Determine Traffic Light Status:
+        // - Green (80-100): Excellent conditions.
+        // - Yellow (40-79): Acceptable but imperfect (e.g. slight chance of rain, or early sunset).
+        // - Red (0-39): Major dealbreakers (e.g. Darkness, Extreme Weather, Conflict).
         let status: 'green' | 'yellow' | 'red' = 'green';
         if (score < 40) status = 'red';
         else if (score < 80) status = 'yellow';
@@ -406,11 +501,11 @@ export function calculateMonthScores(
                 holiday: holiday?.name,
                 weather: weatherData ? weatherData[dateKey] : undefined,
                 raceStartTime: constraints.raceStartTime,
-                raceDuration: constraints.raceDurationHours
+                raceDuration: constraints.raceDurationHours,
+                persona: constraints.persona
             }
         });
     }
 
     return scores;
 }
-

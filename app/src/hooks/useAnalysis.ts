@@ -56,7 +56,8 @@ export function useAnalysis(constraints: EventConstraints) {
         constraints.incorporateTrainingTime,
         constraints.allowWeekends,
         constraints.allowWeekdays,
-        constraints.considerHolidays
+        constraints.considerHolidays,
+        constraints.persona
     ]);
 
     return { scores, loading, weatherData };

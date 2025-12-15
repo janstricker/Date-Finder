@@ -26,7 +26,8 @@ function App() {
     allowWeekends: true,
     allowWeekdays: false,
     considerHolidays: true,
-    blockedDates: []
+    blockedDates: [],
+    persona: 'competition'
   });
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported
