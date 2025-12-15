@@ -153,6 +153,21 @@ export type TranslationKey =
     | 'heatmap.noData'
     | 'heatmap.title'
 
+    // Loading
+    | 'loading.fetching_history'
+    | 'loading.analyzing_year'
+
+    // Top 10 List
+    | 'top10.title'
+    | 'top10.rank'
+    | 'top10.date'
+    | 'top10.score'
+    | 'top10.conditions'
+    | 'top10.view_details'
+    | 'top10.empty'
+    | 'top10.show_more'
+    | 'top10.show_less'
+
     // Search
     | 'search.label'
     | 'search.placeholder'
@@ -321,6 +336,20 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'breakdown.acclimatization': 'Acclimatization Risk',
 
 
+
+        'loading.fetching_history': 'Fetching yearly weather history...',
+        'loading.analyzing_year': 'Analyzing all 365 days...',
+
+        'top10.title': 'Best Days',
+        'top10.rank': 'Rank',
+        'top10.date': 'Date',
+        'top10.score': 'Score',
+        'top10.conditions': 'Conditions',
+        'top10.view_details': 'View',
+        'top10.empty': 'No suitable dates found within criteria.',
+        'top10.show_more': 'Show top 10 days',
+        'top10.show_less': 'Show top 3 only',
+
         'footer.builtWith': 'Built with',
         'footer.rights': 'All rights reserved.'
     },
@@ -477,6 +506,20 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'search.label': 'Ort',
         'search.placeholder': 'Stadt suchen (z.B. Selb, Regensburg)...',
+
+
+        'loading.fetching_history': 'Lade Wetterhistorie (ganzes Jahr)...',
+        'loading.analyzing_year': 'Analysiere alle 365 Tage...',
+
+        'top10.title': 'Beste Tage',
+        'top10.rank': 'Rang',
+        'top10.date': 'Datum',
+        'top10.score': 'Score',
+        'top10.conditions': 'Bedingungen',
+        'top10.view_details': 'Details',
+        'top10.empty': 'Keine passenden Tage mit diesen Einstellungen gefunden.',
+        'top10.show_more': 'Top 10 Tage anzeigen',
+        'top10.show_less': 'Nur Top 3 anzeigen',
 
         'footer.builtWith': 'Entwickelt mit',
         'footer.rights': 'Alle Rechte vorbehalten.'

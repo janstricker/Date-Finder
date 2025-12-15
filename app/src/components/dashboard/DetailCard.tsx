@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 import type { DayScore } from '../../lib/scoring';
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
@@ -7,17 +7,18 @@ import { useLanguage } from '../../context/LanguageContext';
 
 interface DetailCardProps {
     dayScore: DayScore | null;
+    onClose?: () => void;
 }
 
-export function DetailCard({ dayScore }: DetailCardProps) {
+export function DetailCard({ dayScore, onClose }: DetailCardProps) {
     const { t, language } = useLanguage();
     if (!dayScore) return null;
 
     const dateLocale = language === 'de' ? de : enUS;
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-start justify-between mb-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">{format(dayScore.date, 'EEEE, d. MMMM', { locale: dateLocale })}</h2>
                     <div className="group relative inline-block">
@@ -57,6 +58,15 @@ export function DetailCard({ dayScore }: DetailCardProps) {
                         </div>
                     </div>
                 </div>
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="p-2 -mr-2 -mt-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Close details"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
             <div className="space-y-4">

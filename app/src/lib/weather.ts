@@ -48,34 +48,28 @@ export interface WeatherStats {
 
 
 /**
- * Fetches historical weather data for a specific month across the last 10 years
- * to construct a statistical forecast for that month in the target year.
+ * Fetches historical weather data for the ENTIRE year to enable instant navigation
+ * between months and full-year analysis.
  * 
  * Uses OpenMeteo Historical Weather API.
  * 
  * @param lat - Latitude of the location
  * @param lng - Longitude of the location
- * @param month - 0-indexed month (0 = January, 11 = December)
  * @param year - The target year for the generated keys (e.g. 2025)
- * @returns A map of "YYYY-MM-DD" -> WeatherStats
+ * @param onProgress - Optional callback for progress updates (e.g. "Fetching 2018...")
+ * @returns A map of "YYYY-MM-DD" -> WeatherStats for all 365 days
  */
-export async function fetchMonthHistory(lat: number, lng: number, month: number, year: number): Promise<Record<string, WeatherStats>> {
-    const currentYear = year; // Base year for the 10-year lookback (e.g. look back from 2025).
+export async function fetchLocationYearlyHistory(
+    lat: number,
+    lng: number,
+    year: number,
+    onProgress?: (msg: string) => void
+): Promise<Record<string, WeatherStats>> {
+    const currentYear = year; // Base year (e.g. 2026)
 
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // We fetch a buffer before the month starts to calculate trailing rain (Mud Index)
-    // Month is 0-indexed.
-    // Let's go back 5 days from the 1st of the month.
-    // We only need 3 days for the Mud Index, but 5 provides a safe buffer against index errors.
-    const leadDays = 5;
-    // Buffer after the month for rolling window (±2 days)
-    const trailDays = 2;
-
-    // Storage for daily aggregation
-    // Key: Day of Month (1-31)
-    // We collect data for each day of the month across all 10 years.
-    const dailyStats: Record<number, {
+    // We collect data for every possible day of the year (1-366 to cover leap years)
+    // Key: "MM-DD" string (e.g. "01-01")
+    const dailyStats: Record<string, {
         tempsMax: number[],
         tempsMin: number[],
         humidities: number[],
@@ -83,30 +77,48 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
         rains: number[],
         trailingRains: number[]
     }> = {};
-    // Initialize dailyStats for all days of the month
-    for (let d = 1; d <= daysInMonth; d++) {
-        dailyStats[d] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [] };
+
+    // Helper to generate MM-DD keys
+    const getDayKey = (date: Date) => {
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${m}-${d}`;
+    };
+
+    // Initialize dailyStats for all days in a leap year (just to be safe)
+    // We iterate 2024 (a leap year) to get all 366 buckets
+    const tempDate = new Date(2024, 0, 1);
+    while (tempDate.getFullYear() === 2024) {
+        dailyStats[getDayKey(tempDate)] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [] };
+        tempDate.setDate(tempDate.getDate() + 1);
     }
+
+    // Config
+    const leadDays = 5; // Buffer for Mud Index
+    const windowSize = 2; // ±2 days smoothing
 
     // Fetch oldest to newest for chronological order (Limit 10 years back)
     for (let i = 10; i >= 1; i--) {
         const pastYear = currentYear - i;
 
-        // Construct start date: 1st of month minus leadDays
-        const startDate = new Date(pastYear, month, 1 - leadDays);
+        if (onProgress) onProgress(String(pastYear));
+
+        // Construct start date: Jan 1 minus leadDays
+        const startDate = new Date(pastYear, 0, 1 - leadDays);
         const startStr = startDate.toISOString().split('T')[0];
 
-        // Construct end date: last day of month plus trailDays
-        const endDate = new Date(pastYear, month, daysInMonth + trailDays);
+        // Open-Meteo Archive data is only reliably available for completed past years.
+        // We skip the current year to avoid "future date" errors (400 Bad Request) 
+        // and data lag issues.
+        const currentRealYear = new Date().getFullYear();
+        if (pastYear >= currentRealYear) {
+            continue;
+        }
+
+        // Construct end date: Dec 31
+        const endDate = new Date(pastYear, 11, 31);
         const endStr = endDate.toISOString().split('T')[0];
 
-        // API Request: fetch daily metrics. 
-        // Parameters:
-        // - temperature_2m_max/min: Daily extremes at 2m height (standard runner perception).
-        // - precipitation_sum: Total rain/snow in mm.
-        // - relative_humidity_2m_mean: Daily average humidity (critical for heat index).
-        // - wind_speed_10m_max: Maximum gust/sustained wind (10m height) - key for "runability" impact (Gusts).
-        // - timezone=auto: Essential to align "daily" breaks with the local day of the event location.
         const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
 
         // Sequential Fetch to respect API rate limits (avoid 429)
@@ -121,29 +133,40 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
             return null;
         });
 
-        if (res) {
-            // Process response
+        if (res && res.daily) {
             const daily = res.daily;
-            // daily.time array matches daily.temperature_2m_max etc.
 
-            // We iterate strictly through the days of the target month (1..daysInMonth)
-            // But we access the data relative to the fetched start date.
+            // Map the API response to our daily buckets
+            // We need to align the API data (which starts at Jan 1 - leadDays) 
+            // with the actual calendar days of that year.
 
-            const windowSize = 2; // ±2 days
+            // Start iterating from the first ACTUAL day of the year (index = leadDays)
+            // The API response has [leadDays] worth of data before Jan 1.
 
-            for (let d = 1; d <= daysInMonth; d++) {
-                // The index in the API response for day 'd' of the month (center of window).
-                const centerIdx = leadDays + (d - 1);
+            const startOfData = new Date(startDate); // The date corresponding to index 0
 
-                // Helper to get average over ±windowSize
+            // We want to process Jan 1 to Dec 31 of pastYear
+            // idx for Jan 1 is 'leadDays'
+
+            const daysInPastYear = (new Date(pastYear, 11, 31).getTime() - new Date(pastYear, 0, 1).getTime()) / 86400000 + 1;
+
+            for (let d = 0; d < daysInPastYear; d++) {
+                // Actual Date we are processing
+                const date = new Date(pastYear, 0, 1 + d); // Jan 1 + d days
+                const key = getDayKey(date);
+
+                // If key exists in our buckets (it should, unless pastYear is leap and buckets aren't?)
+                // We initialized buckets with a leap year, so all valid MM-DD exist.
+                if (!dailyStats[key]) continue;
+
+                // Index in API response array
+                const centerIdx = leadDays + d;
+
+                // --- Smoothing Logic (Same as before) ---
                 const getWindowAvg = (arr: number[]) => {
                     let sum = 0;
                     let count = 0;
-                    let max = -Infinity; // For wind, we might want max? User said "Rolling Window... to smooth". Avg is safer for noise.
-                    // For wind gusts: if we want "risk", maybe max is better? 
-                    // But user complained about "noise" from one extreme day. Averaging smoothes that.
-                    // "Average of the maximum daily wind speeds" is the metric.
-                    // So we average the daily maxes.
+                    let max = -Infinity;
 
                     for (let w = -windowSize; w <= windowSize; w++) {
                         const idx = centerIdx + w;
@@ -156,29 +179,17 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                     return count > 0 ? sum / count : null;
                 };
 
-                // For wind, usually we want to know the *potential* for wind. 
-                // Averaging gusts reduces the peak. 
-                // However, "Avg Max Wind" (current UI) implies average.
-                // If I average 100, 20, 20, 20, 20 -> 36. This is a "smoother" representation of that week's windiness.
-
                 const tempMax = getWindowAvg(daily.temperature_2m_max);
                 const tempMin = getWindowAvg(daily.temperature_2m_min);
                 const humidity = getWindowAvg(daily.relative_humidity_2m_mean);
                 const wind = getWindowAvg(daily.wind_speed_10m_max);
                 const rain = getWindowAvg(daily.precipitation_sum);
 
-                // Trailing rain (Mud Index) - Keep logic on the CENTER day to respect causality?
-                // Or smooth it? 
-                // Mud index is "3 day trailing sum". 
-                // If we smooth the input days, we implicitly smooth mud.
-                // Let's calculate Mud Index for the *center* day strictly, as that's the physical state on the race day.
-                // UNLESS the user wants "Risk of mud".
-                // Let's stick to Center Day logic for Mud Index to keep it physically grounded to the "target date", 
-                // but since we average everything else, maybe average mud index too?
-                // Let's stick to center day for Mud to be precise on "what if the race is today".
-                // Actually, if we smooth rain, we should probably smooth the mud index too so they correlate.
-                // Let's calculate trailing rain for each day in window and average?
-                // No, simple is best. Calculate trailing rain for center day.
+                // --- Mud Index Logic (Same as before) ---
+                let trailingSum = 0;
+                let trailingCount = 0;
+
+                // Helper for strictly trailing rain
                 const getTrailingRain = (idx: number, arr: number[]) => {
                     let sum = 0;
                     for (let k = 1; k <= 3; k++) {
@@ -186,90 +197,82 @@ export async function fetchMonthHistory(lat: number, lng: number, month: number,
                     }
                     return sum / 3;
                 };
-                // We'll use a smoothed trailing rain? 
-                // Let's just average the trailing rain stat over the window too.
-                let trailingSum = 0;
-                let trailingCount = 0;
+
                 for (let w = -windowSize; w <= windowSize; w++) {
                     const idx = centerIdx + w;
-                    // Calculate trailing rain for this specific day in the window
                     const tVal = getTrailingRain(idx, daily.precipitation_sum);
                     trailingSum += tVal;
                     trailingCount++;
                 }
                 const trailing = trailingCount > 0 ? trailingSum / trailingCount : 0;
 
-
-                if (tempMax !== null) dailyStats[d].tempsMax.push(tempMax);
-                if (tempMin !== null) dailyStats[d].tempsMin.push(tempMin);
-                if (humidity !== null) dailyStats[d].humidities.push(humidity);
-                if (wind !== null) dailyStats[d].winds.push(wind);
-                if (rain !== null) dailyStats[d].rains.push(rain);
-                dailyStats[d].trailingRains.push(trailing);
+                // Push to aggregators
+                if (tempMax !== null) dailyStats[key].tempsMax.push(tempMax);
+                if (tempMin !== null) dailyStats[key].tempsMin.push(tempMin);
+                if (humidity !== null) dailyStats[key].humidities.push(humidity);
+                if (wind !== null) dailyStats[key].winds.push(wind);
+                if (rain !== null) dailyStats[key].rains.push(rain);
+                dailyStats[key].trailingRains.push(trailing);
             }
         }
 
-        // Polite delay to prevent hitting the OpenMeteo rate limit (approx 100 req/min free tier).
-        await new Promise(r => setTimeout(r, 200));
+        // Polite delay
+        await new Promise(r => setTimeout(r, 150));
     }
 
+    // --- Final Aggregation ---
     try {
         const weatherMap: Record<string, WeatherStats> = {};
 
-        Object.keys(dailyStats).forEach(dayKey => {
-            const day = parseInt(dayKey);
-            const d = dailyStats[day];
-            const count = d.tempsMax.length;
+        // Iterate all days of the TARGET year (currentYear)
+        // to construct the final map with YYYY-MM-DD keys
+        const targetStart = new Date(currentYear, 0, 1);
+        const targetEnd = new Date(currentYear, 11, 31);
 
-            if (count > 0) {
-                // Key format: YYYY-MM-DD (target year)
-                const targetDateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        for (let d = new Date(targetStart); d <= targetEnd; d.setDate(d.getDate() + 1)) {
+            const key = getDayKey(d);
+            const stats = dailyStats[key];
 
-                // Calculate Averages across the 10 years of data for this specific day
-                const avgMaxTemp = d.tempsMax.reduce((a, b) => a + b, 0) / count;
-                // Fallback for min temp if missing is to estimate it (though API usually provides it)
-                const avgMinTemp = d.tempsMin.length > 0 ? d.tempsMin.reduce((a, b) => a + b, 0) / d.tempsMin.length : avgMaxTemp - 10;
-                // Default to 50% humidity if data is missing (neutral value)
-                const avgHumidity = d.humidities.length > 0 ? d.humidities.reduce((a, b) => a + b, 0) / d.humidities.length : 50;
+            if (!stats || stats.tempsMax.length === 0) continue;
 
+            const count = stats.tempsMax.length;
+            const targetDateKey = d.toISOString().split('T')[0];
 
-                // Actually avg of "daily max wind" is better for general conditions.
-                const avgMaxWind = d.winds.length > 0 ? d.winds.reduce((a, b) => a + b, 0) / d.winds.length : 0;
+            // Averages
+            const avgMaxTemp = stats.tempsMax.reduce((a, b) => a + b, 0) / count;
+            const avgMinTemp = stats.tempsMin.length > 0 ? stats.tempsMin.reduce((a, b) => a + b, 0) / stats.tempsMin.length : avgMaxTemp - 10;
+            const avgHumidity = stats.humidities.length > 0 ? stats.humidities.reduce((a, b) => a + b, 0) / stats.humidities.length : 50;
+            const avgMaxWind = stats.winds.length > 0 ? stats.winds.reduce((a, b) => a + b, 0) / stats.winds.length : 0;
+            const avgRain = stats.rains.reduce((a, b) => a + b, 0) / count;
+            const avgMud = stats.trailingRains.reduce((a, b) => a + b, 0) / count;
 
-                const avgRain = d.rains.reduce((a, b) => a + b, 0) / count;
-                const avgMud = d.trailingRains.reduce((a, b) => a + b, 0) / count;
+            // Probabilities
+            const rainDays = stats.rains.filter(r => r > 1.0).length;
+            const heavyRainDays = stats.rains.filter(r => r > 5.0).length;
 
-                // Calculate Probabilities:
-                // Count how many years had rain > 1mm (significant rain)
-                const rainDays = d.rains.filter(r => r > 1.0).length;
-                // Count how many years had rain > 5mm (heavy rain)
-                const heavyRainDays = d.rains.filter(r => r > 5.0).length;
-
-                weatherMap[targetDateKey] = {
-                    avgMaxTemp,
-                    avgMinTemp,
-                    avgHumidity,
-                    maxWindSpeed: avgMaxWind,
-                    avgPrecipitation: avgRain,
-                    rainProbability: (rainDays / count) * 100,
-                    heavyRainProbability: (heavyRainDays / count) * 100,
-                    mudIndex: avgMud,
-                    history: {
-                        temps: d.tempsMax, // Keep for backward compat for now, or update interface
-                        tempsMin: d.tempsMin,
-                        rain: d.rains,
-                        humidities: d.humidities,
-                        winds: d.winds
-                    }
-                };
-            }
-        });
+            weatherMap[targetDateKey] = {
+                avgMaxTemp,
+                avgMinTemp,
+                avgHumidity,
+                maxWindSpeed: avgMaxWind,
+                avgPrecipitation: avgRain,
+                rainProbability: (rainDays / count) * 100,
+                heavyRainProbability: (heavyRainDays / count) * 100,
+                mudIndex: avgMud,
+                history: {
+                    temps: stats.tempsMax,
+                    tempsMin: stats.tempsMin,
+                    rain: stats.rains,
+                    humidities: stats.humidities,
+                    winds: stats.winds
+                }
+            };
+        }
 
         return weatherMap;
 
     } catch (e) {
         console.error("Bulk weather fetch failed", e);
-        // Return empty object so the app doesn't crash; UI should handle missing weather data gracefully.
         return {};
     }
 }

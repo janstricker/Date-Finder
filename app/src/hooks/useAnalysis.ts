@@ -1,52 +1,114 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import type { EventConstraints, DayScore } from '../lib/scoring';
-import { fetchMonthHistory, type WeatherStats } from '../lib/weather';
+import { fetchLocationYearlyHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
 import { calculateMonthScores } from '../lib/scoring';
 
 export function useAnalysis(constraints: EventConstraints, conflictingEvents: any[] = []) {
     const { t } = useLanguage();
-    const [scores, setScores] = useState<DayScore[]>([]);
+
+    // State
+    const [scores, setScores] = useState<DayScore[]>([]); // Current month scores
+    const [fullYearScores, setFullYearScores] = useState<DayScore[]>([]); // All 365 days
+
     const [loading, setLoading] = useState(false);
-    const [weatherData, setWeatherData] = useState<Record<string, WeatherStats>>({});
+    const [loadingMessage, setLoadingMessage] = useState<string>('');
+
+    // Data Cache (Memory only for session lifetime)
+    // We cache weather by "lat,lng,year" key to avoid refetching on month change.
+    const weatherCache = useRef<Record<string, Record<string, WeatherStats>>>({});
 
     useEffect(() => {
         let mounted = true;
 
         async function analyze() {
-            setLoading(true);
+            try {
+                const year = constraints.targetMonth.getFullYear();
+                const locationKey = `${constraints.location.lat},${constraints.location.lng},${year}`;
 
-            // 1. Fetch Weather Data (Async)
-            const year = constraints.targetMonth.getFullYear();
-            const month = constraints.targetMonth.getMonth();
+                // --- Step 1: Data Fetching (if needed) ---
+                let weather = weatherCache.current[locationKey];
 
-            // Only fetch if location changed or uncached (simple optimization: fetch every time for MVP simplicity)
-            const weather = await fetchMonthHistory(
-                constraints.location.lat,
-                constraints.location.lng,
-                month,
-                year
-            );
+                if (!weather) {
+                    setLoading(true);
+                    setLoadingMessage('loading.fetching_history');
 
-            if (!mounted) return;
-            // 2. Fetch Holidays (Async)
-            const holidays = await fetchHolidays(year, constraints.stateCode);
+                    // Fetch Full Year Weather
+                    weather = await fetchLocationYearlyHistory(
+                        constraints.location.lat,
+                        constraints.location.lng,
+                        year,
+                        (progressYear) => {
+                            // Optional: could update message with specific year progress
+                            // But simple is better for i18n keys usually
+                        }
+                    );
 
-            if (!mounted) return;
-            setWeatherData(weather);
+                    if (mounted) {
+                        weatherCache.current[locationKey] = weather;
+                    }
+                }
 
-            // 3. Run Scoring (Sync)
-            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, t, weather, conflictingEvents);
-            setScores(results);
-            setLoading(false);
+                if (!mounted) return;
+
+                // Fetch Holidays (Fast in-memory cache usually)
+                const holidays = await fetchHolidays(year, constraints.stateCode);
+
+                if (!mounted) return;
+
+                // --- Step 2: Scoring Calculation (Sync) ---
+                setLoading(true);
+                setLoadingMessage('loading.analyzing_year');
+
+                // 1. Calculate for TARGET Month (for Calendar View)
+                const monthResults = calculateMonthScores(
+                    constraints.targetMonth,
+                    constraints,
+                    holidays,
+                    t,
+                    weather,
+                    conflictingEvents
+                );
+
+                // 2. Calculate for FULL YEAR (for Top 10 List)
+                // We'll iterate Jan to Dec
+                let allScores: DayScore[] = [];
+                for (let m = 0; m < 12; m++) {
+                    // Construct a 1st of Month date for this year
+                    const mDate = new Date(year, m, 1);
+                    const mScores = calculateMonthScores(
+                        mDate,
+                        { ...constraints, targetMonth: mDate }, // Update targetMonth context for scoring
+                        holidays,
+                        t,
+                        weather,
+                        conflictingEvents
+                    );
+                    allScores = allScores.concat(mScores);
+                }
+
+                if (mounted) {
+                    setScores(monthResults);
+                    setFullYearScores(allScores);
+                }
+
+            } catch (e) {
+                console.error("Analysis failed", e);
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                    setLoadingMessage('');
+                }
+            }
         }
 
         analyze();
 
         return () => { mounted = false; };
     }, [
-        constraints.targetMonth.getTime(),
+        // Re-run when dependencies change
+        constraints.targetMonth.getTime(), // If month changes, we re-run scoring (fast), but cache keeps fetch skipped
         constraints.location.lat,
         constraints.location.lng,
         constraints.stateCode,
@@ -65,5 +127,11 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         conflictingEvents
     ]);
 
-    return { scores, loading, weatherData };
+    return {
+        scores,
+        fullYearScores,
+        loading,
+        loadingMessage,
+        weatherData: weatherCache.current[`${constraints.location.lat},${constraints.location.lng},${constraints.targetMonth.getFullYear()}`]
+    };
 }

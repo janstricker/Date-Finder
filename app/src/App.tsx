@@ -3,7 +3,9 @@ import type { EventConstraints } from './lib/scoring';
 import { useAnalysis } from './hooks/useAnalysis';
 import { ConfigForm } from './components/dashboard/ConfigForm';
 import { HeatmapCalendar } from './components/dashboard/HeatmapCalendar';
+import { YearOverview } from './components/dashboard/YearOverview';
 import { DetailCard } from './components/dashboard/DetailCard';
+import { TopDaysList } from './components/dashboard/TopDaysList';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Footer } from './components/Footer';
 
@@ -54,8 +56,10 @@ function FichtelPlanner() {
   }, []);
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null);
+  const [isYearView, setIsYearView] = useState(true);
 
-  const { scores, loading } = useAnalysis(constraints, conflictingEvents);
+  // loadingMessage is now available (and translated via key)
+  const { scores, fullYearScores, loading, loadingMessage } = useAnalysis(constraints, conflictingEvents);
 
   const handleMonthChange = (offset: number) => {
     const newDate = new Date(constraints.targetMonth);
@@ -67,10 +71,38 @@ function FichtelPlanner() {
     setConstraints(prev => ({ ...prev, targetMonth: date }));
   };
 
+  const handleMonthClick = (date: Date) => {
+    setConstraints(prev => ({ ...prev, targetMonth: date }));
+    setIsYearView(false);
+  };
+
   const handleDaySelect = (date: Date) => {
-    // Find the score object for the selected date
-    const found = scores.find(s => s.date.toDateString() === date.toDateString());
-    if (found) setSelectedDayScore(found);
+    // If selected from Top 10, we might need to jump month
+    if (date.getMonth() !== constraints.targetMonth.getMonth() || date.getFullYear() !== constraints.targetMonth.getFullYear()) {
+      const newTarget = new Date(date.getFullYear(), date.getMonth(), 1);
+      setConstraints(prev => ({ ...prev, targetMonth: newTarget }));
+    }
+
+    // Find the score object for the selected date either in current scores or full year
+    // Try fullYearScores first as it covers everything
+    const found = fullYearScores.find(s => s.date.toDateString() === date.toDateString());
+    if (found) {
+      setSelectedDayScore(found);
+      setIsYearView(false); // Switch to month view context
+    }
+    else {
+      // Fallback to current month scores
+      const mFound = scores.find(s => s.date.toDateString() === date.toDateString());
+      if (mFound) {
+        setSelectedDayScore(mFound);
+        setIsYearView(false);
+      }
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedDayScore(null);
+    // Stay in month view (don't force year view)
   };
 
   const isFormValid = constraints.location.name !== '';
@@ -79,8 +111,6 @@ function FichtelPlanner() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
       <div className="flex-grow p-6 md:p-12">
         <div className="max-w-6xl mx-auto space-y-6">
-
-          {/* Header removed from original code, kept clean */}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -95,23 +125,52 @@ function FichtelPlanner() {
                 <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-medium text-blue-700">{t('loading.analyzing')}</span>
+                    <span className="text-sm font-medium text-blue-700">
+                      {loadingMessage ? t(loadingMessage as any) : t('loading.analyzing')}
+                    </span>
                   </div>
                 </div>
               )}
 
-              <HeatmapCalendar
-                scores={scores}
-                selectedDate={selectedDayScore ? selectedDayScore.date : null}
-                onSelectDate={handleDaySelect}
-                currentMonth={constraints.targetMonth}
-                onMonthChange={handleMonthChange}
-                onDateChange={handleDateChange}
-                disabled={!isFormValid}
-              />
+              {/* Detail View OR Top 10 List */}
+              {isFormValid && (
+                <>
+                  {selectedDayScore ? (
+                    <DetailCard dayScore={selectedDayScore} onClose={handleCloseDetail} />
+                  ) : (
+                    !loading && <TopDaysList scores={fullYearScores} onSelectDay={handleDaySelect} />
+                  )}
+                </>
+              )}
 
-              {/* Detail View (Skeleton or Real) */}
-              {isFormValid && <DetailCard dayScore={selectedDayScore} />}
+              {/* Back Button (only when in Month View without selection) */}
+              {!isYearView && !selectedDayScore && (
+                <button
+                  onClick={() => setIsYearView(true)}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                >
+                  ← Back to Year Overview
+                </button>
+              )}
+
+              {/* Calendar View Logic */}
+              {isYearView && !selectedDayScore ? (
+                <YearOverview
+                  scores={fullYearScores}
+                  currentYear={constraints.targetMonth.getFullYear()}
+                  onMonthClick={handleMonthClick}
+                />
+              ) : (
+                <HeatmapCalendar
+                  scores={scores}
+                  selectedDate={selectedDayScore ? selectedDayScore.date : null}
+                  onSelectDate={handleDaySelect}
+                  currentMonth={constraints.targetMonth}
+                  onMonthChange={handleMonthChange}
+                  onDateChange={handleDateChange}
+                  disabled={!isFormValid}
+                />
+              )}
             </div>
 
           </div>
