@@ -48,6 +48,8 @@ export interface EventConstraints {
 
     /** Scoring Mode / Persona */
     persona: 'competition' | 'experience';
+    /** Check for conflicting events within 50km */
+    checkConflictingEvents: boolean;
 }
 
 /**
@@ -98,16 +100,19 @@ import { formatDuration } from './utils';
  * - Apply Daylight Analysis -> Penalties for darkness during race hours.
  * - Apply Weather Analysis (if data available) -> Penalties for Temp/Rain/Wind/Mud.
  * 
+/**
  * @param month - The target month to evaluate
  * @param constraints - User preferences and event specs
  * @param holidays - List of public/school holidays for the region
  * @param weatherData - (Optional) Historical weather map
+ * @param conflictingEvents - (Optional) List of other sport events to check against
  */
 export function calculateMonthScores(
     month: Date,
     constraints: EventConstraints,
     holidays: Holiday[],
-    weatherData?: Record<string, WeatherStats>
+    weatherData?: Record<string, WeatherStats>,
+    conflictingEvents?: any[] // We can define a stricter type if needed
 ): DayScore[] {
     const scores: DayScore[] = [];
 
@@ -168,12 +173,51 @@ export function calculateMonthScores(
         }
 
         // 2. Blocked Dates (Manual Block)
-        const dateString = currentDate.toISOString().split('T')[0];
+        const yearStr = currentDate.getFullYear();
+        const monthStr = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(currentDate.getDate()).padStart(2, '0');
+        const dateString = `${yearStr}-${monthStr}-${dayStr}`;
         if (constraints.blockedDates.includes(dateString)) {
             const penalty = -100; // Treat as full penalty for breakdown visualization
             score = 0;
             reasons.push("Blocked Date");
             breakdown.push({ label: 'Blocked Date', value: penalty });
+        }
+
+        // 2b. Conflicting Events Check
+        if (constraints.checkConflictingEvents && conflictingEvents) {
+            // Find events on this date
+            const eventsOnDate = conflictingEvents.filter(e => e.date === dateString);
+
+            // Check distance (simple haversine or just assume pre-filtered? 
+            // The prompt says "take other sport events... within 50km...".
+            // Implementation: We calculate distance here for precision.
+            for (const event of eventsOnDate) {
+                if (!event.coords) continue;
+
+                // Haversine formula for distance
+                const R = 6371; // km
+                const dLat = (event.coords.lat - constraints.location.lat) * Math.PI / 180;
+                const dLon = (event.coords.lng - constraints.location.lng) * Math.PI / 180;
+                const lat1 = constraints.location.lat * Math.PI / 180;
+                const lat2 = event.coords.lat * Math.PI / 180;
+
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const d = R * c;
+
+                if (d <= 50) {
+                    const penalty = -30;
+                    score += penalty;
+                    reasons.push(`Event Conflict: ${event.name} (${Math.round(d)}km)`);
+                    breakdown.push({ label: 'Event Conflict', value: penalty });
+                    // Only apply once per day to avoid nuking score completely if multiple events?
+                    // Or accumulate? Let's apply once per conflicting event but maybe cap it?
+                    // For now, let's just break after finding one to warn the user.
+                    break;
+                }
+            }
         }
 
         // 3. Weekend & Holiday Check & Weekdays

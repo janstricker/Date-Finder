@@ -7,6 +7,7 @@ import { Check, Info } from 'lucide-react';
 interface ConfigFormProps {
     constraints: EventConstraints;
     onUpdate: (newConstraints: EventConstraints) => void;
+    dataLastUpdated?: string;
 }
 
 const GERMAN_STATES: Record<string, string> = {
@@ -31,7 +32,7 @@ const GERMAN_STATES: Record<string, string> = {
 const DISTANCE_OPTIONS = [5, 10, 21, 30, 42, 50, 68, 100];
 const CUTOFF_OPTIONS = [2, 4, 6, 8, 10, 12, 14, 16, 18];
 
-export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
+export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFormProps) {
     const [isCustomDistance, setIsCustomDistance] = useState(!DISTANCE_OPTIONS.includes(constraints.distance));
     const [isCustomCutoff, setIsCustomCutoff] = useState(!CUTOFF_OPTIONS.includes(constraints.raceDurationHours));
 
@@ -198,18 +199,19 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
 
                 {/* 1. Persona / Mode Card */}
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
-                    <div className="flex flex-col items-start gap-4">
+                    <div className="flex items-center justify-between">
                         <div className="space-y-0.5 relative group cursor-help">
-                            <span className="text-base font-medium text-gray-900 flex items-center gap-2">
-                                Scoring Mode
+                            <h3 className="text-base font-medium text-gray-900 flex items-center gap-2">
+                                Run Persona
                                 <Info className="w-4 h-4 text-gray-400" />
-                            </span>
+                            </h3>
+                            <p className="text-xs text-gray-500">Optimized scoring logic</p>
                             {/* Tooltip */}
-                            <div className="absolute left-0 bottom-full mb-2 w-72 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
+                            <div className="absolute left-0 bottom-full mb-2 w-72 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
                                 <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Impact on Scoring</div>
                                 <div className="space-y-3">
                                     <div>
-                                        <div className="text-xs font-bold text-white mb-0.5">🏎️ Competition Mode</div>
+                                        <div className="text-xs font-bold text-white mb-0.5">🚀 Race Mode</div>
                                         <p className="text-[10px] text-gray-300 mb-1">Cooler is better. Heat penalizes heavily.</p>
                                         <div className="grid grid-cols-2 gap-x-2 text-[10px]">
                                             <span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span>
@@ -217,45 +219,67 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
                                         </div>
                                     </div>
                                     <div className="border-t border-white/10 pt-2">
-                                        <div className="text-xs font-bold text-white mb-0.5">🎒 Experience Mode</div>
+                                        <div className="text-xs font-bold text-white mb-0.5">🌲 Experience Mode</div>
                                         <p className="text-[10px] text-gray-300 mb-1">Warmer is better. Cold penalizes heavily.</p>
                                         <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                                            <span className="text-emerald-400">Ideal</span><span>15°C - 20°C</span>
+                                            <span className="text-emerald-400">Ideal</span><span>15°C - 22°C</span>
                                             <span className="text-rose-400">Penalty</span><span>&lt; 15°C</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="flex bg-slate-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => onUpdate({ ...constraints, persona: 'experience' })}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'experience'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                Experience
-                            </button>
-                            <button
-                                onClick={() => onUpdate({ ...constraints, persona: 'competition' })}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'competition'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                Competition
-                            </button>
-                        </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => onUpdate({ ...constraints, persona: 'competition' })}
+                            className={`p-3 rounded-lg border text-left transition-all ${constraints.persona === 'competition'
+                                ? 'bg-purple-50 border-purple-200 ring-1 ring-purple-500'
+                                : 'bg-white border-gray-200 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="font-bold text-gray-900 text-sm mb-0.5">🚀 Race Mode</div>
+                            <div className="text-xs text-gray-500">Performance focus</div>
+                        </button>
 
-                        <p className="text-sm text-slate-500">
-                            {constraints.persona === 'competition' ? 'Optimized for best performance' : 'Optimized for comfort & enjoyment'}
-                        </p>
+                        <button
+                            onClick={() => onUpdate({ ...constraints, persona: 'experience' })}
+                            className={`p-3 rounded-lg border text-left transition-all ${constraints.persona === 'experience'
+                                ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500'
+                                : 'bg-white border-gray-200 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="font-bold text-gray-900 text-sm mb-0.5">🌲 Experience Mode</div>
+                            <div className="text-xs text-gray-500">Comfort focus</div>
+                        </button>
                     </div>
                 </div>
 
-                {/* 2. Preparation Time Card */}
+                {/* 2. Conflicting Events Card */}
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Switch
+                                checked={constraints.checkConflictingEvents}
+                                onChange={(val) => onUpdate({ ...constraints, checkConflictingEvents: val })}
+                            />
+                            <div>
+                                <span className="text-sm font-medium text-gray-900 block">Avoid Event Conflicts</span>
+                                <span className="text-xs text-gray-500">Penalize dates with other runs within 50km</span>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Metadata */}
+                    {dataLastUpdated && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 text-[10px] text-gray-400 flex gap-2">
+                            <span>Data updated: {new Date(dataLastUpdated).toLocaleDateString()}</span>
+                            <span>Next update: {new Date(new Date(dataLastUpdated).getTime() + 7 * 86400000).toLocaleDateString()}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. Preparation Time Card */}
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-3">
                         <Switch
@@ -314,7 +338,7 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
                     )}
                 </div>
 
-                {/* 3. Holidays Card */}
+                {/* 4. Holidays Card */}
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-3">
                         <Switch

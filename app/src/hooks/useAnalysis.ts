@@ -4,7 +4,7 @@ import { fetchMonthHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
 import { calculateMonthScores } from '../lib/scoring';
 
-export function useAnalysis(constraints: EventConstraints) {
+export function useAnalysis(constraints: EventConstraints, conflictingEvents: any[] = []) {
     const [scores, setScores] = useState<DayScore[]>([]);
     const [loading, setLoading] = useState(false);
     const [weatherData, setWeatherData] = useState<Record<string, WeatherStats>>({});
@@ -35,7 +35,7 @@ export function useAnalysis(constraints: EventConstraints) {
             setWeatherData(weather);
 
             // 3. Run Scoring (Sync)
-            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, weather);
+            const results = calculateMonthScores(constraints.targetMonth, constraints, holidays, weather, conflictingEvents);
             setScores(results);
             setLoading(false);
         }
@@ -57,7 +57,9 @@ export function useAnalysis(constraints: EventConstraints) {
         constraints.allowWeekends,
         constraints.allowWeekdays,
         constraints.considerHolidays,
-        constraints.persona
+        constraints.persona,
+        constraints.checkConflictingEvents,
+        conflictingEvents
     ]);
 
     return { scores, loading, weatherData };

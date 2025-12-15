@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { EventConstraints } from './lib/scoring';
 import { useAnalysis } from './hooks/useAnalysis';
 import { ConfigForm } from './components/dashboard/ConfigForm';
@@ -27,12 +27,30 @@ function App() {
     allowWeekdays: false,
     considerHolidays: true,
     blockedDates: [],
-    persona: 'experience'
+    persona: 'experience',
+    checkConflictingEvents: true
   });
+
+  const [conflictingEvents, setConflictingEvents] = useState<any[]>([]);
+  const [dataLastUpdated, setDataLastUpdated] = useState<string | undefined>();
+
+  useEffect(() => {
+    fetch('/data/events.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.events) {
+          setConflictingEvents(data.events);
+          if (data.metadata?.lastUpdated) {
+            setDataLastUpdated(data.metadata.lastUpdated);
+          }
+        }
+      })
+      .catch(err => console.error("Failed to load events", err));
+  }, []);
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported
 
-  const { scores, loading } = useAnalysis(constraints);
+  const { scores, loading } = useAnalysis(constraints, conflictingEvents);
 
   const handleMonthChange = (offset: number) => {
     const newDate = new Date(constraints.targetMonth);
@@ -68,7 +86,7 @@ function App() {
 
           {/* Left Col: Config */}
           <div className="lg:col-span-5 space-y-8">
-            <ConfigForm constraints={constraints} onUpdate={setConstraints} />
+            <ConfigForm constraints={constraints} onUpdate={setConstraints} dataLastUpdated={dataLastUpdated} />
           </div>
 
           {/* Right Col: The Big Calendar */}
