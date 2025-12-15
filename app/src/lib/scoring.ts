@@ -277,17 +277,17 @@ export function calculateMonthScores(
             const darknessHours = darknessMinutes / 60;
             if (darknessHours > 0.5) {
                 // Modified: Append specific "Headlamp required" note
-                reasons.push(`${formatDuration(darknessHours)} Night (Headlamp required)`);
-                breakdown.push({ label: 'Night Hours', value: 0 });
+                reasons.push(`${formatDuration(darknessHours)} Darkness (Headlamp required)`);
+                breakdown.push({ label: 'Darkness Hours', value: 0 });
             } else {
                 // For very short darkness (e.g. < 30m), maybe just "Twilight"? 
                 // Sticking to user request for "Headlamp required" if notable night hours.
                 // Let's treat >.5h as the threshold for the note.
                 // If less, maybe just "Low light" or ignore.
-                breakdown.push({ label: 'Night Hours', value: 0 });
+                breakdown.push({ label: 'Darkness Hours', value: 0 });
             }
         } else {
-            breakdown.push({ label: 'Night Hours', value: 0 });
+            breakdown.push({ label: 'Darkness Hours', value: 0 });
         }
 
         // 5. Weather check (Historical)
