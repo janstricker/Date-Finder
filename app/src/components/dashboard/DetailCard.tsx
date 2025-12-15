@@ -141,7 +141,7 @@ export function DetailCard({ dayScore }: DetailCardProps) {
 
                                                 {/* Race Overlay (Top Half) */}
                                                 <div
-                                                    className="absolute top-0 bottom-1/2 bg-indigo-500 opacity-90 border-b border-white/20 shadow-sm"
+                                                    className="absolute top-0 bottom-1/2 bg-pink-500 opacity-90 border-b border-white/20 shadow-sm"
                                                     style={{ left: `${raceStartPct}%`, width: `${raceWidthPct}%` }}
                                                 />
 
@@ -164,11 +164,11 @@ export function DetailCard({ dayScore }: DetailCardProps) {
 
                                                 {/* Race Markers */}
                                                 <div className="absolute top-0 h-1/2 w-px bg-white" style={{ left: `${raceStartPct}%` }}>
-                                                    <div className="absolute top-1 -translate-x-1/2 text-[9px] text-white font-mono bg-indigo-600 px-0.5 rounded leading-none z-10">{dayScore.details.raceStartTime}</div>
+                                                    <div className="absolute top-1 -translate-x-1/2 text-[9px] text-white font-mono bg-pink-900 px-0.5 rounded leading-none z-10">{dayScore.details.raceStartTime}</div>
                                                 </div>
                                                 {raceEndMins < totalMins && (
                                                     <div className="absolute top-0 h-1/2 w-px bg-white" style={{ left: `${raceStartPct + raceWidthPct}%` }}>
-                                                        <div className="absolute top-1 -translate-x-1/2 text-[9px] text-white font-mono bg-indigo-600 px-0.5 rounded leading-none z-10">{Math.floor(raceEndMins / 60)}:{(raceEndMins % 60).toString().padStart(2, '0')}</div>
+                                                        <div className="absolute top-1 -translate-x-1/2 text-[9px] text-white font-mono bg-pink-900 px-0.5 rounded leading-none z-10">{Math.floor(raceEndMins / 60)}:{(raceEndMins % 60).toString().padStart(2, '0')}</div>
                                                     </div>
                                                 )}
 

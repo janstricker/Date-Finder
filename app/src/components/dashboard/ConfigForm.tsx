@@ -196,7 +196,66 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
             <div className="space-y-6">
                 <h2 className="text-xl font-bold text-gray-900">Scoring parameters</h2>
 
-                {/* 1. Preparation Time Card */}
+                {/* 1. Persona / Mode Card */}
+                <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                    <div className="flex flex-col items-start gap-4">
+                        <div className="space-y-0.5 relative group cursor-help">
+                            <span className="text-base font-medium text-gray-900 flex items-center gap-2">
+                                Scoring Mode
+                                <Info className="w-4 h-4 text-gray-400" />
+                            </span>
+                            {/* Tooltip */}
+                            <div className="absolute left-0 bottom-full mb-2 w-72 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Impact on Scoring</div>
+                                <div className="space-y-3">
+                                    <div>
+                                        <div className="text-xs font-bold text-white mb-0.5">🏎️ Competition Mode</div>
+                                        <p className="text-[10px] text-gray-300 mb-1">Cooler is better. Heat penalizes heavily.</p>
+                                        <div className="grid grid-cols-2 gap-x-2 text-[10px]">
+                                            <span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span>
+                                            <span className="text-rose-400">Penalty</span><span>&gt; 12°C</span>
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-white/10 pt-2">
+                                        <div className="text-xs font-bold text-white mb-0.5">🎒 Experience Mode</div>
+                                        <p className="text-[10px] text-gray-300 mb-1">Warmer is better. Cold penalizes heavily.</p>
+                                        <div className="grid grid-cols-2 gap-x-2 text-[10px]">
+                                            <span className="text-emerald-400">Ideal</span><span>15°C - 20°C</span>
+                                            <span className="text-rose-400">Penalty</span><span>&lt; 15°C</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex bg-slate-100 p-1 rounded-lg">
+                            <button
+                                onClick={() => onUpdate({ ...constraints, persona: 'experience' })}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'experience'
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                Experience
+                            </button>
+                            <button
+                                onClick={() => onUpdate({ ...constraints, persona: 'competition' })}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'competition'
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                Competition
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-slate-500">
+                            {constraints.persona === 'competition' ? 'Optimized for best performance' : 'Optimized for comfort & enjoyment'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* 2. Preparation Time Card */}
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-3">
                         <Switch
@@ -255,7 +314,7 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
                     )}
                 </div>
 
-                {/* 2. Holidays Card */}
+                {/* 3. Holidays Card */}
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-3">
                         <Switch
@@ -299,64 +358,6 @@ export function ConfigForm({ constraints, onUpdate }: ConfigFormProps) {
                             </div>
                         </div>
                     )}
-                </div>
-                {/* 3. Persona / Mode Card */}
-                <div className="border border-gray-200 rounded-lg p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5 relative group cursor-help">
-                            <span className="text-base font-medium text-gray-900 flex items-center gap-2">
-                                Scoring Mode
-                                <Info className="w-4 h-4 text-gray-400" />
-                            </span>
-                            <p className="text-sm text-slate-500">
-                                {constraints.persona === 'competition' ? 'Optimized for best performance' : 'Optimized for comfort & enjoyment'}
-                            </p>
-
-                            {/* Tooltip */}
-                            <div className="absolute left-0 bottom-full mb-2 w-72 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Impact on Scoring</div>
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="text-xs font-bold text-white mb-0.5">🏎️ Competition Mode</div>
-                                        <p className="text-[10px] text-gray-300 mb-1">Cooler is better. Heat penalizes heavily.</p>
-                                        <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                                            <span className="text-emerald-400">Ideal</span><span>5°C - 12°C</span>
-                                            <span className="text-rose-400">Penalty</span><span>&gt; 12°C</span>
-                                        </div>
-                                    </div>
-                                    <div className="border-t border-white/10 pt-2">
-                                        <div className="text-xs font-bold text-white mb-0.5">🎒 Experience Mode</div>
-                                        <p className="text-[10px] text-gray-300 mb-1">Warmer is better. Cold penalizes heavily.</p>
-                                        <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                                            <span className="text-emerald-400">Ideal</span><span>15°C - 20°C</span>
-                                            <span className="text-rose-400">Penalty</span><span>&lt; 15°C</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex bg-slate-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => onUpdate({ ...constraints, persona: 'competition' })}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'competition'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                Competition
-                            </button>
-                            <button
-                                onClick={() => onUpdate({ ...constraints, persona: 'experience' })}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${constraints.persona === 'experience'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                Experience
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div >

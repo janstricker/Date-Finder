@@ -17,7 +17,7 @@ function App() {
     // Default Location: Fichtelgebirge
     location: { lat: 50.0513, lng: 11.8517, name: 'Fichtelgebirge' },
     stateCode: 'BY', // Bayern
-    minTrainingWeeks: 12,
+    minTrainingWeeks: 24,
     raceStartTime: '07:00',
     raceDurationHours: 12,
     distance: 68, // 68k
@@ -27,7 +27,7 @@ function App() {
     allowWeekdays: false,
     considerHolidays: true,
     blockedDates: [],
-    persona: 'competition'
+    persona: 'experience'
   });
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null); // Assuming DayScore type is available or will be imported
