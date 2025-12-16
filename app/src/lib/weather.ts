@@ -150,7 +150,7 @@ export async function fetchLocationYearlyHistory(
             // Start iterating from the first ACTUAL day of the year (index = leadDays)
             // The API response has [leadDays] worth of data before Jan 1.
 
-            const startOfData = new Date(startDate); // The date corresponding to index 0
+
 
             // We want to process Jan 1 to Dec 31 of pastYear
             // idx for Jan 1 is 'leadDays'

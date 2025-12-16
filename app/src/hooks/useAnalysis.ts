@@ -44,7 +44,7 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                         constraints.location.lat,
                         constraints.location.lng,
                         year,
-                        (progressYear) => {
+                        (_) => {
                             // Optional: could update message with specific year progress
                             // But simple is better for i18n keys usually
                         }
