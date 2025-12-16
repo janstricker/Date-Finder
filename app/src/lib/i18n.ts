@@ -153,6 +153,23 @@ export type TranslationKey =
     | 'heatmap.noData'
     | 'heatmap.title'
 
+    // GPX / Route
+    | 'config.searchCity'
+    | 'config.uploadRoute'
+    | 'config.gpx.route'
+    | 'config.gpx.drop'
+    | 'config.gpx.drag'
+    | 'config.gpx.loaded'
+    | 'config.gpx.remove'
+    | 'config.gpx.tip'
+    | 'config.gpx.analysisActive'
+    | 'config.gpx.runAnalysis'
+
+    // Misc
+    | 'detail.close'
+    | 'detail.mud.dry'
+    | 'detail.mud.wet'
+
     // Loading
     | 'loading.fetching_history'
     | 'loading.analyzing_year'
@@ -283,6 +300,21 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'heatmap.title': 'Heatmap Calendar',
         'heatmap.noData': 'No data.',
+
+        'config.searchCity': 'Search City',
+        'config.uploadRoute': 'Upload Route',
+        'config.gpx.route': 'GPX Route',
+        'config.gpx.drop': 'Click to upload .gpx file',
+        'config.gpx.drag': 'or drag and drop',
+        'config.gpx.loaded': 'Route Loaded',
+        'config.gpx.remove': 'Remove',
+        'config.gpx.tip': '💡 Tip: Drag the markers to the most exposed parts of your route (peaks, ridges) for accurate weather.',
+        'config.gpx.analysisActive': 'Analysis Active',
+        'config.gpx.runAnalysis': 'Run Analysis',
+
+        'detail.close': 'Close details',
+        'detail.mud.dry': 'Dry',
+        'detail.mud.wet': 'Wet',
 
         'search.label': 'Location',
         'search.placeholder': 'Search city (e.g. Bayreuth)...',
@@ -513,6 +545,21 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'heatmap.noData': 'Keine Daten.',
         'heatmap.title': 'Heatmap',
+
+        'config.searchCity': 'Stadt suchen',
+        'config.uploadRoute': 'Route hochladen',
+        'config.gpx.route': 'GPX Route',
+        'config.gpx.drop': 'Klicken zum Hochladen (.gpx)',
+        'config.gpx.drag': 'oder per Drag & Drop',
+        'config.gpx.loaded': 'Route geladen',
+        'config.gpx.remove': 'Entfernen',
+        'config.gpx.tip': '💡 Tipp: Ziehe die Marker auf exponierte Stellen (Gipfel, Kämme) für genauere Wetterdaten.',
+        'config.gpx.analysisActive': 'Analyse aktiv',
+        'config.gpx.runAnalysis': 'Analyse starten',
+
+        'detail.close': 'Details schließen',
+        'detail.mud.dry': 'Trocken',
+        'detail.mud.wet': 'Nass',
 
         'search.label': 'Ort',
         'search.placeholder': 'Stadt suchen (z.B. Selb, Regensburg)...',

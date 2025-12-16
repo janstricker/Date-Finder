@@ -50,7 +50,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                 ))}
                             </div>
                             <div className="mt-2 pt-2 border-t border-white/20 flex justify-between items-center text-xs font-bold">
-                                <span>Final Score</span>
+                                <span>{t('detail.finalScore')}</span>
                                 <span className={dayScore.score >= 80 ? 'text-emerald-400' : dayScore.score >= 40 ? 'text-amber-400' : 'text-rose-400'}>
                                     {Math.round(dayScore.score)}
                                 </span>
@@ -62,7 +62,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                     <button
                         onClick={onClose}
                         className="p-2 -mr-2 -mt-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                        title="Close details"
+                        title={t('detail.close')}
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -333,8 +333,8 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                         })}
                                     </div>
                                     <div className="flex justify-between mt-1 px-0.5">
-                                        <span className="text-[9px] text-gray-400">Dry</span>
-                                        <span className="text-[9px] text-gray-400">Wet</span>
+                                        <span className="text-[9px] text-gray-400">{t('detail.mud.dry')}</span>
+                                        <span className="text-[9px] text-gray-400">{t('detail.mud.wet')}</span>
                                     </div>
                                 </div>
 

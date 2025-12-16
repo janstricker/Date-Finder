@@ -2,8 +2,10 @@ import { useState } from 'react';
 import type { EventConstraints } from '../../lib/scoring';
 import { LocationSearch } from './LocationSearch';
 import { Switch } from '../ui/Switch';
-import { Check, Info, Trophy, Mountain } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { parseGPX } from '../../lib/gpx';
+import { RouteMap } from '../RouteMap';
+import { Upload, Play, Check, Info, Trophy, Mountain } from 'lucide-react';
 
 interface ConfigFormProps {
     constraints: EventConstraints;
@@ -32,6 +34,181 @@ const GERMAN_STATES: Record<string, string> = {
 
 const DISTANCE_OPTIONS = [5, 10, 21, 30, 42, 50, 68, 100];
 const CUTOFF_OPTIONS = [2, 4, 6, 8, 10, 12, 14, 16, 18];
+
+// Sub-component for Location/Route Tabs
+function LocationRouteTabs({ constraints, onUpdate, t, deriveStateCode }: {
+    constraints: EventConstraints,
+    onUpdate: (c: EventConstraints) => void,
+    t: any,
+    deriveStateCode: (s?: string) => string
+}) {
+    // Mode state: 'city' | 'route'
+    // If gpxData exists, default to 'route', else 'city'
+    const [mode, setMode] = useState<'city' | 'route'>(constraints.gpxData ? 'route' : 'city');
+
+    // Sync external changes (if gpx removed, switch to city)
+    // useEffect(() => {
+    //     if (!constraints.gpxData && mode === 'route') setMode('city'); // actually we want to stay in route mode to show upload
+    // }, [constraints.gpxData]);
+
+    return (
+        <div className="space-y-6">
+            <div className="flex border-b border-gray-200">
+                <button
+                    className={`pb-3 px-4 text-sm font-medium transition-colors border-b-2 ${mode === 'city' ? 'text-emerald-600 border-emerald-500' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+                    onClick={() => {
+                        setMode('city');
+                        // Clear GPX data when explicitly switching to city? 
+                        // User might want to keep it but just check city. 
+                        // But scoring uses GPX if present. So yes, should clear or deactivate.
+                        if (constraints.gpxData) onUpdate({ ...constraints, gpxData: undefined });
+                    }}
+                >
+                    {t('config.location')}
+                </button>
+                <button
+                    className={`pb-3 px-4 text-sm font-medium transition-colors border-b-2 ${mode === 'route' ? 'text-emerald-600 border-emerald-500' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+                    onClick={() => setMode('route')}
+                >
+                    {t('config.gpx.route')}
+                </button>
+            </div>
+
+            {mode === 'city' ? (
+                <div className="animate-in fade-in slide-in-from-left-1 duration-200">
+                    <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
+                        <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                        {t('config.searchCity')}
+                    </h3>
+                    <LocationSearch
+                        initialName={constraints.location.name}
+                        onLocationSelect={(loc) => onUpdate({
+                            ...constraints,
+                            location: { lat: loc.lat, lng: loc.lng, name: loc.name },
+                            stateCode: deriveStateCode(loc.admin1)
+                        })}
+                    />
+                </div>
+            ) : (
+                <div className="animate-in fade-in slide-in-from-right-1 duration-200">
+                    <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
+                        <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                        {t('config.uploadRoute')}
+                    </h3>
+
+                    {!constraints.gpxData ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-center cursor-pointer relative group">
+                            <input
+                                type="file"
+                                accept=".gpx"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const text = await file.text();
+                                        const data = parseGPX(text);
+                                        onUpdate({
+                                            ...constraints,
+                                            distance: Math.round(data.totalDistance),
+                                            gpxData: {
+                                                track: data.track,
+                                                sampledPoints: data.sampledPoints,
+                                                stats: {
+                                                    distance: data.totalDistance,
+                                                    elevationGain: data.elevationGain
+                                                },
+                                                ready: false // Manual Trigger: Not ready yet
+                                            }
+                                        });
+                                    }
+                                }}
+                            />
+                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-emerald-100 transition-colors">
+                                <Upload className="w-6 h-6 text-gray-400 group-hover:text-emerald-600" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">
+                                {t('config.gpx.drop')}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {t('config.gpx.drag')}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-semibold text-gray-900 text-sm">
+                                        {t('config.gpx.loaded')}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {constraints.gpxData.stats.distance.toFixed(1)}km • {constraints.gpxData.stats.elevationGain.toFixed(0)}m
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => onUpdate({ ...constraints, gpxData: undefined })}
+                                    className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 hover:bg-red-50 rounded"
+                                >
+                                    {t('config.gpx.remove')}
+                                </button>
+                            </div>
+
+                            <RouteMap
+                                track={constraints.gpxData.track}
+                                sampledPoints={constraints.gpxData.sampledPoints}
+                                onPointsChange={(newPoints) => {
+                                    if (constraints.gpxData) {
+                                        onUpdate({
+                                            ...constraints,
+                                            gpxData: {
+                                                ...constraints.gpxData,
+                                                sampledPoints: newPoints,
+                                                ready: false // Reset ready state if points move
+                                            }
+                                        });
+                                    }
+                                }}
+                            />
+
+                            <div className="flex items-center justify-between gap-4">
+                                <p className="text-xs text-gray-500 flex-1">
+                                    {t('config.gpx.tip')}
+                                </p>
+
+                                <button
+                                    onClick={() => {
+                                        if (constraints.gpxData) {
+                                            onUpdate({
+                                                ...constraints,
+                                                gpxData: { ...constraints.gpxData, ready: true }
+                                            });
+                                        }
+                                    }}
+                                    disabled={constraints.gpxData.ready}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all shadow-sm ${constraints.gpxData.ready
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md'
+                                        }`}
+                                >
+                                    {constraints.gpxData.ready ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            {t('config.gpx.analysisActive')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="w-4 h-4 fill-current" />
+                                            {t('config.gpx.runAnalysis')}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFormProps) {
     const { t } = useLanguage();
@@ -96,21 +273,14 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
     return (
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm space-y-8">
 
-            {/* Location Section */}
-            <div>
-                <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
-                    <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
-                    {t('config.location')}
-                </h3>
-                <LocationSearch
-                    initialName={constraints.location.name}
-                    onLocationSelect={(loc) => onUpdate({
-                        ...constraints,
-                        location: { lat: loc.lat, lng: loc.lng, name: loc.name }, // Keep name
-                        stateCode: deriveStateCode(loc.admin1) // Helper to guess state? MVP: simple map
-                    })}
-                />
-            </div>
+            {/* LOCATION / ROUTE TABS */}
+
+            <LocationRouteTabs
+                constraints={constraints}
+                onUpdate={onUpdate}
+                t={t}
+                deriveStateCode={deriveStateCode}
+            />
 
             <hr className="border-gray-100" />
 
@@ -167,7 +337,7 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                             <div className="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Hours"
+                                    placeholder={t('config.hours')}
                                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={constraints.raceDurationHours}
                                     onChange={(e) => onUpdate({ ...constraints, raceDurationHours: parseFloat(e.target.value) })}

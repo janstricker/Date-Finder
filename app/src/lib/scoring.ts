@@ -52,6 +52,18 @@ export interface EventConstraints {
     checkConflictingEvents: boolean;
     /** Radius in km to search for conflicting events (default 50) */
     conflictRadius: number;
+
+    /** Optional Custom Route Data (GPX) */
+    gpxData?: {
+        sampledPoints: { lat: number, lng: number, ele: number }[];
+        track: { lat: number, lng: number, ele: number }[];
+        stats: {
+            distance: number;
+            elevationGain: number;
+        };
+        /** If true, data is confirmed and ready for analysis */
+        ready: boolean;
+    };
 }
 
 /**

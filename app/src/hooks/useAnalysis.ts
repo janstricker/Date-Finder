@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import type { EventConstraints, DayScore } from '../lib/scoring';
-import { fetchLocationYearlyHistory, type WeatherStats } from '../lib/weather';
+import { fetchLocationYearlyHistory, fetchRouteYearlyHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
 import { calculateMonthScores } from '../lib/scoring';
 
@@ -16,7 +16,7 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
     const [loadingMessage, setLoadingMessage] = useState<string>('');
 
     // Data Cache (Memory only for session lifetime)
-    // We cache weather by "lat,lng,year" key to avoid refetching on month change.
+    // We cache weather by "lat,lng,year" (or "route_hash,year") key to avoid refetching.
     const weatherCache = useRef<Record<string, Record<string, WeatherStats>>>({});
 
     const [error, setError] = useState<string | null>(null);
@@ -28,8 +28,37 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
             try {
                 setError(null); // Clear previous errors
                 const year = constraints.targetMonth.getFullYear();
-                // Version 2: Force cache invalidation after timezone fix
-                const locationKey = `${constraints.location.lat},${constraints.location.lng},${year},v2`;
+
+                // Determine Cache Key
+                let locationKey = '';
+                let shouldFetch = true;
+
+                if (constraints.gpxData && constraints.gpxData.sampledPoints.length > 0) {
+                    // Route Weather Mode
+                    if (!constraints.gpxData.ready) {
+                        // Waiting for user confirmation (manual trigger)
+                        // Don't fetch yet.
+                        shouldFetch = false;
+                        console.log("Analysis skipped: GPX data not ready");
+                    } else {
+                        // Create stable key from points
+                        const ptStr = constraints.gpxData.sampledPoints
+                            .map(p => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`)
+                            .join('|');
+                        locationKey = `route_${ptStr}_${year}`;
+                    }
+                } else {
+                    // Single Point Mode
+                    locationKey = `${constraints.location.lat},${constraints.location.lng},${year},v2`;
+                }
+
+
+                // If skipping fetch, we might just return early or keep existing data
+                if (!shouldFetch) {
+                    setLoading(false);
+                    return;
+                }
+
                 console.log('Analyzing for:', locationKey);
 
                 // --- Step 1: Data Fetching (if needed) ---
@@ -39,16 +68,25 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                     setLoading(true);
                     setLoadingMessage('loading.fetching_history');
 
-                    // Fetch Full Year Weather
-                    weather = await fetchLocationYearlyHistory(
-                        constraints.location.lat,
-                        constraints.location.lng,
-                        year,
-                        (_) => {
-                            // Optional: could update message with specific year progress
-                            // But simple is better for i18n keys usually
-                        }
-                    );
+                    // Fetch Logic
+                    if (constraints.gpxData && constraints.gpxData.sampledPoints.length > 0) {
+                        // Multi-point fetch
+                        weather = await fetchRouteYearlyHistory(
+                            constraints.gpxData.sampledPoints,
+                            year,
+                            (msg) => { console.log(msg); /* Optional UI update */ }
+                        );
+                    } else {
+                        // Standard Single Location Fetch
+                        weather = await fetchLocationYearlyHistory(
+                            constraints.location.lat,
+                            constraints.location.lng,
+                            year,
+                            (_) => {
+                                // Optional: could update message with specific year progress
+                            }
+                        );
+                    }
 
                     if (mounted) {
                         weatherCache.current[locationKey] = weather;
@@ -130,7 +168,12 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         constraints.persona,
         constraints.checkConflictingEvents,
         constraints.conflictRadius,
-        conflictingEvents
+        conflictingEvents,
+        // Add dependency on GPX data changes (specifically sampled points)
+        // Ideally use deep compare or simple length/first-point check to avoid excessive loops
+        // JSON stringify is a cheap way for small arrays of points
+        constraints.gpxData ? JSON.stringify(constraints.gpxData.sampledPoints) : null,
+        constraints.gpxData?.ready // Re-run when ready flag toggles
     ]);
 
     return {
@@ -139,6 +182,11 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         loading,
         loadingMessage,
         error,
-        weatherData: weatherCache.current[`${constraints.location.lat},${constraints.location.lng},${constraints.targetMonth.getFullYear()}`]
+        weatherData: weatherCache.current[
+            // Re-derive key for return value (bit simplified, potentially risky if key derivation logic duplicates)
+            constraints.gpxData && constraints.gpxData.sampledPoints.length > 0
+                ? `route_${constraints.gpxData.sampledPoints.map(p => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`).join('|')}_${constraints.targetMonth.getFullYear()}`
+                : `${constraints.location.lat},${constraints.location.lng},${constraints.targetMonth.getFullYear()},v2`
+        ]
     };
 }

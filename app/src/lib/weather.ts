@@ -59,6 +59,110 @@ export interface WeatherStats {
  * @param onProgress - Optional callback for progress updates (e.g. "Fetching 2018...")
  * @returns A map of "YYYY-MM-DD" -> WeatherStats for all 365 days
  */
+// ... keep existing fetchLocationYearlyHistory ...
+
+/**
+ * Fetches historical weather for multiple points and averages them.
+ * Used for Route-based analysis.
+ */
+export async function fetchRouteYearlyHistory(
+    points: { lat: number, lng: number }[],
+    year: number,
+    onProgress?: (msg: string) => void
+): Promise<Record<string, WeatherStats>> {
+    // 1. Fetch data for ALL points
+    const allStats: Record<string, WeatherStats>[] = [];
+
+    // Process sequentially to be kind to API rate limits, 
+    // or arguably parallel with small delay. 
+    // Open-Meteo allows concurrent, but let's be safe with strict sequential for now.
+
+    for (let i = 0; i < points.length; i++) {
+        const pt = points[i];
+        if (onProgress) onProgress(`Fetching point ${i + 1}/${points.length} for ${year}...`);
+
+        // Reuse the single location fetcher
+        // Note: caching logic inside fetchLocationYearlyHistory will handle caching per point!
+        const stats = await fetchLocationYearlyHistory(pt.lat, pt.lng, year);
+        allStats.push(stats);
+    }
+
+    // 2. Aggregate / Average
+    const averaged: Record<string, WeatherStats> = {};
+    // We assume all points return same keys (YYYY-MM-DD) for the requested year.
+
+    // Iterate every day in the first result set
+    Object.keys(allStats[0]).forEach(dateKey => {
+        // Sum accumulators
+        let sumMaxTemp = 0;
+        let sumMinTemp = 0;
+        let sumHumidity = 0;
+        let sumMaxWind = 0;
+        let sumPrecip = 0;
+        let sumRainProb = 0;
+        let sumHeavyRainProb = 0;
+        let sumMud = 0;
+        let count = allStats.length;
+
+        // History aggregation (concatenation? or average traces?)
+        // For graphs, averaging the traces is best to show "Mean Conditions".
+        // But arrays might be different lengths if missing data? 
+        // implementation ensures same length (based on daysInPastYear).
+
+        // Let's create empty arrays for "Avg History" of length 10 (years)
+        // Actually history is daily values for 10 years... 
+        // "temps" is array of daily max temps for that specific day across 10 years.
+
+        // We need to initialize history accumulators
+        const histTemps: number[] = new Array(allStats[0][dateKey].history.temps.length).fill(0);
+        const histTempsMin: number[] = new Array(allStats[0][dateKey].history.tempsMin.length).fill(0);
+        const histRain: number[] = new Array(allStats[0][dateKey].history.rain.length).fill(0);
+        const histHumid: number[] = new Array(allStats[0][dateKey].history.humidities.length).fill(0);
+        const histWinds: number[] = new Array(allStats[0][dateKey].history.winds.length).fill(0);
+
+        allStats.forEach(statMap => {
+            const day = statMap[dateKey];
+            if (!day) return; // Should not happen
+
+            sumMaxTemp += day.avgMaxTemp;
+            sumMinTemp += day.avgMinTemp;
+            sumHumidity += day.avgHumidity;
+            sumMaxWind += day.maxWindSpeed;
+            sumPrecip += day.avgPrecipitation;
+            sumRainProb += day.rainProbability;
+            sumHeavyRainProb += day.heavyRainProbability;
+            sumMud += day.mudIndex;
+
+            // History Summation
+            day.history.temps.forEach((v, k) => histTemps[k] += v);
+            day.history.tempsMin.forEach((v, k) => histTempsMin[k] += v);
+            day.history.rain.forEach((v, k) => histRain[k] += v);
+            day.history.humidities.forEach((v, k) => histHumid[k] += v);
+            day.history.winds.forEach((v, k) => histWinds[k] += v);
+        });
+
+        averaged[dateKey] = {
+            avgMaxTemp: sumMaxTemp / count,
+            avgMinTemp: sumMinTemp / count,
+            avgHumidity: sumHumidity / count,
+            maxWindSpeed: sumMaxWind / count, // Average representation of windiness across route
+            avgPrecipitation: sumPrecip / count,
+            rainProbability: sumRainProb / count, // Avg risk
+            heavyRainProbability: sumHeavyRainProb / count,
+            mudIndex: sumMud / count,
+            history: {
+                temps: histTemps.map(v => v / count),
+                tempsMin: histTempsMin.map(v => v / count),
+                rain: histRain.map(v => v / count),
+                humidities: histHumid.map(v => v / count),
+                winds: histWinds.map(v => v / count)
+            }
+        };
+    });
+
+    return averaged;
+}
+
 export async function fetchLocationYearlyHistory(
     lat: number,
     lng: number,
