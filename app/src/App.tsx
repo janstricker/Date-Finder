@@ -59,7 +59,7 @@ function FichtelPlanner() {
   const [isYearView, setIsYearView] = useState(true);
 
   // loadingMessage is now available (and translated via key)
-  const { scores, fullYearScores, loading, loadingMessage } = useAnalysis(constraints, conflictingEvents);
+  const { scores, fullYearScores, loading, loadingMessage, error } = useAnalysis(constraints, conflictingEvents);
 
   const handleMonthChange = (offset: number) => {
     const newDate = new Date(constraints.targetMonth);
@@ -128,6 +128,25 @@ function FichtelPlanner() {
                     <span className="text-sm font-medium text-blue-700">
                       {loadingMessage ? t(loadingMessage as any) : t('loading.analyzing')}
                     </span>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl animate-in fade-in duration-300">
+                  <div className="flex flex-col items-center gap-3 p-6 bg-red-50 rounded-lg border border-red-200 shadow-xl max-w-sm text-center">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-1">
+                      ⚠️
+                    </div>
+                    <span className="text-sm font-semibold text-red-800">
+                      {t(error as any)}
+                    </span>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
+                    >
+                      Reload App
+                    </button>
                   </div>
                 </div>
               )}

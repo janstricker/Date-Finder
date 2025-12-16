@@ -156,6 +156,7 @@ export type TranslationKey =
     // Loading
     | 'loading.fetching_history'
     | 'loading.analyzing_year'
+    | 'error.analysis_failed'
 
     // Top 10 List
     | 'top10.title'
@@ -338,7 +339,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
 
         'loading.fetching_history': 'Fetching yearly weather history...',
-        'loading.analyzing_year': 'Analyzing all 365 days...',
+        'loading.analyzing_year': 'Analyzing full year...',
+        'error.analysis_failed': 'Failed to load weather data. Please check your connection or try again later.',
 
         'top10.title': 'Best Days',
         'top10.rank': 'Rank',
@@ -502,14 +504,15 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'breakdown.acclimatization': 'Akklimatisierung',
 
         'heatmap.noData': 'Keine Daten.',
-        'heatmap.title': 'Heatmap Kalender',
+        'heatmap.title': 'Heatmap',
 
         'search.label': 'Ort',
         'search.placeholder': 'Stadt suchen (z.B. Selb, Regensburg)...',
 
 
         'loading.fetching_history': 'Lade Wetterhistorie (ganzes Jahr)...',
-        'loading.analyzing_year': 'Analysiere alle 365 Tage...',
+        'loading.analyzing_year': 'Analysiere das komplette Jahr...',
+        'error.analysis_failed': 'Fehler beim Laden der Wetterdaten. Bitte prüfen Sie Ihre Verbindung oder versuchen Sie es später noch einmal.',
 
         'top10.title': 'Beste Tage',
         'top10.rank': 'Rang',

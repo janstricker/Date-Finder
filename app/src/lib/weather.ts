@@ -85,6 +85,13 @@ export async function fetchLocationYearlyHistory(
         return `${m}-${d}`;
     };
 
+    const getFullDateKey = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
     // Initialize dailyStats for all days in a leap year (just to be safe)
     // We iterate 2024 (a leap year) to get all 366 buckets
     const tempDate = new Date(2024, 0, 1);
@@ -105,7 +112,7 @@ export async function fetchLocationYearlyHistory(
 
         // Construct start date: Jan 1 minus leadDays
         const startDate = new Date(pastYear, 0, 1 - leadDays);
-        const startStr = startDate.toISOString().split('T')[0];
+        const startStr = getFullDateKey(startDate);
 
         // Open-Meteo Archive data is only reliably available for completed past years.
         // We skip the current year to avoid "future date" errors (400 Bad Request) 
@@ -117,7 +124,7 @@ export async function fetchLocationYearlyHistory(
 
         // Construct end date: Dec 31
         const endDate = new Date(pastYear, 11, 31);
-        const endStr = endDate.toISOString().split('T')[0];
+        const endStr = getFullDateKey(endDate);
 
         const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
 
@@ -125,7 +132,7 @@ export async function fetchLocationYearlyHistory(
         const res = await fetch(url).then(async r => {
             if (r.status === 429) {
                 console.warn('Rate limited, skipping year', pastYear);
-                return null;
+                throw new Error('API Rate Limit Exceeded (429)');
             }
             return r.json();
         }).catch(err => {
@@ -236,7 +243,7 @@ export async function fetchLocationYearlyHistory(
             if (!stats || stats.tempsMax.length === 0) continue;
 
             const count = stats.tempsMax.length;
-            const targetDateKey = d.toISOString().split('T')[0];
+            const targetDateKey = getFullDateKey(d);
 
             // Averages
             const avgMaxTemp = stats.tempsMax.reduce((a, b) => a + b, 0) / count;
@@ -273,6 +280,7 @@ export async function fetchLocationYearlyHistory(
 
     } catch (e) {
         console.error("Bulk weather fetch failed", e);
-        return {};
+        // Rethrow so useAnalysis can handle it
+        throw e;
     }
 }

@@ -19,13 +19,18 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
     // We cache weather by "lat,lng,year" key to avoid refetching on month change.
     const weatherCache = useRef<Record<string, Record<string, WeatherStats>>>({});
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         let mounted = true;
 
         async function analyze() {
             try {
+                setError(null); // Clear previous errors
                 const year = constraints.targetMonth.getFullYear();
-                const locationKey = `${constraints.location.lat},${constraints.location.lng},${year}`;
+                // Version 2: Force cache invalidation after timezone fix
+                const locationKey = `${constraints.location.lat},${constraints.location.lng},${year},v2`;
+                console.log('Analyzing for:', locationKey);
 
                 // --- Step 1: Data Fetching (if needed) ---
                 let weather = weatherCache.current[locationKey];
@@ -94,7 +99,8 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                 }
 
             } catch (e) {
-                console.error("Analysis failed", e);
+                console.error("Analysis failed - check network or rate limits", e);
+                if (mounted) setError('error.analysis_failed');
             } finally {
                 if (mounted) {
                     setLoading(false);
@@ -132,6 +138,7 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         fullYearScores,
         loading,
         loadingMessage,
+        error,
         weatherData: weatherCache.current[`${constraints.location.lat},${constraints.location.lng},${constraints.targetMonth.getFullYear()}`]
     };
 }
