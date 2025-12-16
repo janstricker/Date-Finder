@@ -166,12 +166,17 @@ export type TranslationKey =
     | 'top10.conditions'
     | 'top10.view_details'
     | 'top10.empty'
+    | 'top10.empty'
     | 'top10.show_more'
     | 'top10.show_less'
 
     // Search
     | 'search.label'
     | 'search.placeholder'
+    | 'search.noResults.germany'
+
+    // Weather Source
+    | 'weather.source'
 
     // Footer
     | 'footer.builtWith'
@@ -281,6 +286,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'search.label': 'Location',
         'search.placeholder': 'Search city (e.g. Bayreuth)...',
+        'search.noResults.germany': 'No results found. (Note: Search limited to Germany)',
+
+        'weather.source': 'Data Source: Open-Meteo (ERA5 Reanalysis)',
 
         'mud.perfect': 'Perfect',
         'mud.good': 'Good',
@@ -508,7 +516,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'search.label': 'Ort',
         'search.placeholder': 'Stadt suchen (z.B. Selb, Regensburg)...',
+        'search.noResults.germany': 'Keine Ergebnisse. (Hinweis: Suche auf Deutschland beschränkt)',
 
+        'weather.source': 'Datenquelle: Open-Meteo (ERA5 Reanalysis)',
 
         'loading.fetching_history': 'Lade Wetterhistorie (ganzes Jahr)...',
         'loading.analyzing_year': 'Analysiere das komplette Jahr...',

@@ -65,6 +65,21 @@ export async function fetchLocationYearlyHistory(
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
+    // Cache Key: e.g. "weather_v2_50.1234_11.5678_2025"
+    // Using 4 decimal places gives precision of ~11m, sufficient for weather grid
+    const cacheKey = `weather_v2_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
+
+    // 1. Try LocalStorage Cache
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            console.log('Weather Cache Hit:', cacheKey);
+            return JSON.parse(cached);
+        }
+    } catch (e) {
+        console.warn('Failed to read from localStorage', e);
+    }
+
     const currentYear = year; // Base year (e.g. 2026)
 
     // We collect data for every possible day of the year (1-366 to cover leap years)
@@ -274,6 +289,13 @@ export async function fetchLocationYearlyHistory(
                     winds: stats.winds
                 }
             };
+        }
+
+        // 2. Save to Cache
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify(weatherMap));
+        } catch (e) {
+            console.warn('Failed to save weather to localStorage (Quota?)', e);
         }
 
         return weatherMap;

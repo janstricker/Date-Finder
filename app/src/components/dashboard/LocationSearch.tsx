@@ -97,6 +97,18 @@ export function LocationSearch({ initialName = '', onLocationSelect }: LocationS
                     ))}
                 </div>
             )}
+
+            {/* No Results Message */}
+            {isOpen && query.length >= 2 && results.length === 0 && !loading && (
+                <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-100 p-3 text-center">
+                    <span className="text-sm text-gray-500">{t('search.noResults.germany')}</span>
+                </div>
+            )}
+
+            {/* Data Source Info */}
+            <div className="mt-1 text-[10px] text-gray-400 text-right">
+                {t('weather.source')}
+            </div>
         </div>
     );
 }

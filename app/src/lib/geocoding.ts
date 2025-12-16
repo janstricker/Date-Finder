@@ -27,13 +27,19 @@ export async function searchLocation(query: string): Promise<GeoLocation[]> {
 
     try {
         const response = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json&country_code=DE`
         );
 
         if (!response.ok) throw new Error('Geocoding failed');
 
         const data = await response.json();
-        return data.results || [];
+
+        // Client-side filtering because API ignores country_code param sometimes or for specific endpoint versions
+        if (data.results) {
+            return data.results.filter((res: any) => res.country_code === 'DE');
+        }
+
+        return [];
     } catch (error) {
         console.error('Geocoding error:', error);
         return [];
