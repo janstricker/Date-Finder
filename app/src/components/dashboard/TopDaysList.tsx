@@ -72,7 +72,16 @@ export function TopDaysList({ scores, onSelectDay }: TopDaysListProps) {
                                 <tr
                                     key={day.date.toISOString()}
                                     onClick={() => onSelectDay(day.date)}
-                                    className="hover:bg-blue-50 transition-colors cursor-pointer group"
+                                    // Make row accessible
+                                    tabIndex={0}
+                                    role="button"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onSelectDay(day.date);
+                                        }
+                                    }}
+                                    className="hover:bg-blue-50 transition-colors cursor-pointer group focus-visible:outline-none focus-visible:bg-blue-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
                                 >
                                     <td className="px-4 py-3 text-center">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm mx-auto ${rankColor}`}>

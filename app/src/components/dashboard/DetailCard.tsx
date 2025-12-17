@@ -24,7 +24,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                     <div className="group relative inline-block">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold tracking-wide mt-1 cursor-help
                     ${dayScore.status === 'green' ? 'bg-emerald-100 text-emerald-700' : ''}
-                    ${dayScore.status === 'yellow' ? 'bg-amber-100 text-amber-700' : ''}
+                    ${dayScore.status === 'yellow' ? 'bg-amber-100 text-amber-800' : ''}
                     ${dayScore.status === 'red' ? 'bg-rose-100 text-rose-700' : ''}
                  `}>
                             {dayScore.status === 'green' && t('detail.status.green')}
@@ -304,10 +304,10 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                             const mud = dayScore.details.weather.mudIndex;
                                             let label = t('detail.mud.perfect');
                                             let color = 'text-emerald-600';
-                                            if (mud > 15) { label = t('detail.mud.veryMuddy'); color = 'text-red-600'; }
-                                            else if (mud > 8) { label = t('detail.mud.muddy'); color = 'text-orange-600'; }
-                                            else if (mud > 5) { label = t('detail.mud.damp'); color = 'text-yellow-600'; }
-                                            else if (mud > 2) { label = t('detail.mud.good'); color = 'text-emerald-500'; }
+                                            if (mud > 0.40) { label = t('detail.mud.veryMuddy'); color = 'text-red-600'; }
+                                            else if (mud > 0.35) { label = t('detail.mud.muddy'); color = 'text-orange-600'; }
+                                            else if (mud > 0.25) { label = t('detail.mud.damp'); color = 'text-yellow-600'; }
+                                            else if (mud > 0.15) { label = t('detail.mud.good'); color = 'text-emerald-500'; }
                                             return <div className={`text-xs font-bold ${color}`}>{label}</div>;
                                         })()}
                                     </div>
@@ -315,10 +315,11 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                         {[1, 2, 3, 4, 5].map((step) => {
                                             const mud = dayScore.details.weather!.mudIndex;
                                             let currentLevel = 1;
-                                            if (mud > 15) currentLevel = 5;
-                                            else if (mud > 8) currentLevel = 4;
-                                            else if (mud > 5) currentLevel = 3;
-                                            else if (mud > 2) currentLevel = 2;
+                                            // Volumetric Water Content 0-0.5 typical range
+                                            if (mud > 0.40) currentLevel = 5;      // Saturation
+                                            else if (mud > 0.35) currentLevel = 4; // Very Wet
+                                            else if (mud > 0.25) currentLevel = 3; // Field Capacity
+                                            else if (mud > 0.15) currentLevel = 2; // Moist
 
                                             const active = step <= currentLevel;
                                             let stepColor = 'bg-gray-100';

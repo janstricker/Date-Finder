@@ -73,7 +73,7 @@ export function HeatmapCalendar({
                 <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-0.5 shadow-sm">
                     <button
                         onClick={() => onMonthChange(-1)}
-                        className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         disabled={disabled}
                     >
                         <ChevronLeft className="w-4 h-4 text-gray-600" />
@@ -102,7 +102,7 @@ export function HeatmapCalendar({
 
                     <button
                         onClick={() => onMonthChange(1)}
-                        className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         disabled={disabled}
                     >
                         <ChevronRight className="w-4 h-4 text-gray-600" />
@@ -133,9 +133,9 @@ export function HeatmapCalendar({
 
                     // Determine Color
                     let bgClass = "bg-gray-100";
-                    if (dayScore.status === 'green') bgClass = "bg-emerald-500 text-white";
-                    if (dayScore.status === 'yellow') bgClass = "bg-amber-400 text-white";
-                    if (dayScore.status === 'red') bgClass = "bg-rose-500 text-white";
+                    if (dayScore.status === 'green') bgClass = "bg-emerald-500 text-white bg-[radial-gradient(circle,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:4px_4px]"; // Polka dot
+                    if (dayScore.status === 'yellow') bgClass = "bg-amber-400 text-amber-900 bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[length:4px_4px]"; // Vertical stripes
+                    if (dayScore.status === 'red') bgClass = "bg-rose-500 text-white bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.1)_25%,rgba(0,0,0,0.1)_50%,transparent_50%,transparent_75%,rgba(0,0,0,0.1)_75%,rgba(0,0,0,0.1)_100%)] bg-[length:8px_8px]"; // Diagonal stripes
 
                     // Add opacity only if not selected (to highlight selection)
                     if (!isSelected && selectedDate) {
@@ -147,7 +147,7 @@ export function HeatmapCalendar({
                             key={dayScore.date.toISOString()}
                             onClick={() => onSelectDate(dayScore.date)}
                             className={cn(
-                                "h-8 md:h-10 rounded-md flex flex-col items-center justify-center transition-all hover:scale-105 relative",
+                                "h-8 md:h-10 rounded-md flex flex-col items-center justify-center transition-all hover:scale-105 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1",
                                 bgClass,
                                 isSelected ? "ring-2 ring-blue-500/50 z-10 scale-110 shadow-md opacity-100" : ""
                             )}

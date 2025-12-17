@@ -186,9 +186,9 @@ export async function fetchLocationYearlyHistory(
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
-    // Cache Key: e.g. "weather_v5_50.1234_11.5678_2025"
+    // Cache Key: e.g. "weather_v6_50.1234_11.5678_2025"
     // Using 4 decimal places gives precision of ~11m, sufficient for weather grid
-    const cacheKey = `weather_v5_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
+    const cacheKey = `weather_v6_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
 
     // 1. Try LocalStorage Cache
     try {
@@ -211,7 +211,7 @@ export async function fetchLocationYearlyHistory(
         humidities: number[],
         winds: number[],
         rains: number[],
-        trailingRains: number[],
+        trailingRains: number[], // We keep naming it 'trailingRains' for compatibility/laziness in struct but it stores mudIndex
         apparentTemps: number[],
         precipHours: number[]
     }> = {};
@@ -276,7 +276,7 @@ export async function fetchLocationYearlyHistory(
         }
 
         const endStr = getFullDateKey(endDate);
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_hours,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_hours,relative_humidity_2m_mean,wind_speed_10m_max,soil_moisture_0_to_7cm_mean&timezone=auto`;
 
         // Sequential Fetch to respect API rate limits (avoid 429)
         const res = await fetch(url).then(async r => {
@@ -304,11 +304,6 @@ export async function fetchLocationYearlyHistory(
 
             // Start iterating from the first ACTUAL day of the year (index = leadDays)
             // The API response has [leadDays] worth of data before Jan 1.
-
-
-
-            // We want to process Jan 1 to Dec 31 of pastYear
-            // idx for Jan 1 is 'leadDays'
 
             const daysInPastYear = (new Date(pastYear, 11, 31).getTime() - new Date(pastYear, 0, 1).getTime()) / 86400000 + 1;
 
@@ -351,26 +346,9 @@ export async function fetchLocationYearlyHistory(
                 const wind = getWindowAvg(daily.wind_speed_10m_max);
                 const rain = getWindowAvg(daily.precipitation_sum);
 
-                // --- Mud Index Logic (Same as before) ---
-                let trailingSum = 0;
-                let trailingCount = 0;
-
-                // Helper for strictly trailing rain
-                const getTrailingRain = (idx: number, arr: number[]) => {
-                    let sum = 0;
-                    for (let k = 1; k <= 3; k++) {
-                        sum += (arr[idx - k] || 0);
-                    }
-                    return sum / 3;
-                };
-
-                for (let w = -windowSize; w <= windowSize; w++) {
-                    const idx = centerIdx + w;
-                    const tVal = getTrailingRain(idx, daily.precipitation_sum);
-                    trailingSum += tVal;
-                    trailingCount++;
-                }
-                const trailing = trailingCount > 0 ? trailingSum / trailingCount : 0;
+                // --- Mud Index: Use Real API Soil Moisture ---
+                // Field: soil_moisture_0_to_7cm_mean (m³/m³)
+                const mudValue = getWindowAvg(daily.soil_moisture_0_to_7cm_mean || []);
 
                 // Push to aggregators
                 if (tempMax !== null) dailyStats[key].tempsMax.push(tempMax);
@@ -380,7 +358,8 @@ export async function fetchLocationYearlyHistory(
                 if (humidity !== null) dailyStats[key].humidities.push(humidity);
                 if (wind !== null) dailyStats[key].winds.push(wind);
                 if (rain !== null) dailyStats[key].rains.push(rain);
-                dailyStats[key].trailingRains.push(trailing);
+                if (mudValue !== null) dailyStats[key].trailingRains.push(mudValue);
+
             }
         }
 

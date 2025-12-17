@@ -1,4 +1,4 @@
-# FichtelUltra Event OS: Date Finder
+# FichtelUltra Event OS: Date Finder (Beta)
 
 ## Background
 The **Date Finder** is the first module of the **FichtelUltra Event OS**, a comprehensive toolkit designed to democratize professional trail running event organization.
@@ -12,24 +12,32 @@ The application provides a "Vibe Coding" dashboard that analyzes every day of a 
 *   **🏃 Runability Score (0-100)**: A proprietary "Vibe Coding" algorithm that evaluates a date's suitability for running. It processes:
     *   **Temperature Comfort**: Penalties for extreme heat (>20°C) or freezing cold (<0°C).
     *   **Precipitation Impact**: Heavy penalties for rain, especially during race hours.
+    *   **Soil Moisture / Mud Index**: Estimates trail conditions (Dry, Damp, Muddy, Very Muddy) based on preceding rainfall.
     *   **Daylight Safety**: Scores based on how much of the race happens in daylight vs. civil twilight vs. night.
-    *   **Wind Factor**: (Coming soon: Wind chill adjustments).
+    *   **Wind Factor**: Penalties for high gusts and windchill effects.
 *   **📊 "Vibe Coding" Dashboard**: A visual Deep Dive into any selected day:
     *   **Interactive Charts**: 4-Metric view (Temp, Rain, Wind, Humidity) with 3-hour granularity.
     *   **Daylight visualizer**: See exactly when the sun rises/sets relative to your race timeline.
+    *   **Training Prep**: Analysis of training time sufficiency, including winter training adjustments and crash course warnings.
 *   **📍 Location Intelligence**:
-    *   **Smart Search**: Type any city (e.g., "Bayreuth", "Chamonix") to auto-fetch coordinates.
+    *   **Smart Search**: Type any city (e.g., "Bayreuth", "Chamonix") to auto-fetch coordinates using OpenMeteo Geocoding.
+    *   **GPX Route Analysis**: Upload a GPX track to visualize the route on a map and fetch weather data for specific high-exposure segments (e.g., peaks).
     *   **Timezone Aware**: All times are adjusted to the local timezone of the race location.
-*   **☀️ Historical Weather Analysis**: Fetches 5-year historical averages from OpenMeteo for reliable forecasting of seasonal trends.
+*   **☀️ Historical Weather Analysis**: Fetches 10-year historical averages from OpenMeteo (ERA5 Reanalysis) for reliable forecasting of seasonal trends.
 *   **🎉 Holiday Integration**:
     *   **Public Holidays**: Treated as positive days (participants are free).
     *   **School Holidays**: Displayed for planning context (families might be away).
     *   **State Selection**: Configurable for all German states.
-*   **🚫 Conflict Management**: Simple UI to manually block dates, ensuring you don't clash with major adjacent events (like the Berlin Marathon).
+*   **🚫 Conflict Management**: 
+    *   **Radius Search**: Automatically detects conflicting events within a configurable radius.
+    *   **Manual Blocking**: Simple UI to manually block dates.
+*   **🌐 Internationalization (i18n)**: Fully localized in English and German.
+*   **♿ Accessibility (A11y)**: Optimized for keyboard navigation and screen readers; high-contrast modes and semantic HTML structure.
 
 ## Technical Stack
 *   **Frontend**: React (Vite), TypeScript
 *   **UI/UX**: Tailwind CSS, shadcn/ui, Lucide Icons
+*   **Maps**: `react-leaflet`, `leaflet`
 *   **Logic**: `suncalc` (Daylight), `date-fns` (Time), Custom Scoring Algorithms
 *   **APIs**:
     *   [OpenMeteo](https://open-meteo.com/) (Weather & Geocoding)
@@ -42,8 +50,8 @@ This is currently an **MVP (Minimum Viable Product)** running entirely client-si
 1.  **Backend Integration (Supabase)**:
     *   User Authentication to save multiple event drafts.
     *   Persistent storage for custom constraints.
-2.  **Competition Intelligence**:
-    *   Automated fetching of competitor events (e.g., from DUV Ultra Statistics or other race calendars) to replace manual blocking.
+2.  **Advanced Competition Intelligence**:
+    *   Automated fetching of competitor events (e.g., from DUV Ultra Statistics or other race calendars).
 3.  **Export & Share**:
     *   Generate one-pager PDF reports to share with local authorities or stakeholders.
     *   "Add to Calendar" functionality.

@@ -46,7 +46,7 @@ export function YearOverview({ scores, onMonthClick, currentYear }: YearOverview
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {monthsData.map((monthScores, monthIndex) => (
-                    <div key={monthIndex} className="bg-white border border-gray-100 rounded-lg p-2 shadow-sm flex flex-col gap-1 hover:border-blue-200 transition-colors cursor-pointer group"
+                    <button key={monthIndex} className="bg-white border border-gray-100 rounded-lg p-2 shadow-sm flex flex-col gap-1 hover:border-blue-200 transition-colors cursor-pointer group text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         onClick={() => {
                             // Zoom in on this month
                             const monthDate = new Date(currentYear, monthIndex, 1);
@@ -57,27 +57,27 @@ export function YearOverview({ scores, onMonthClick, currentYear }: YearOverview
                         <div className="grid grid-cols-7 gap-px pointer-events-none">
                             {/* Empty slots for start of month offset (Monday start) */}
                             {monthScores.length > 0 && Array.from({ length: (monthScores[0].date.getDay() + 6) % 7 }).map((_, i) => (
-                                <div key={`empty-${i}`} className="h-2 w-2" />
+                                <div key={`empty-${i}`} className="h-3 w-3" />
                             ))}
 
                             {monthScores.map((day) => {
                                 let bgClass = "bg-gray-100";
-                                if (day.status === 'green') bgClass = "bg-emerald-500";
-                                if (day.status === 'yellow') bgClass = "bg-amber-400";
-                                if (day.status === 'red') bgClass = "bg-rose-500";
+                                if (day.status === 'green') bgClass = "bg-emerald-500 rounded-sm bg-[radial-gradient(circle,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:4px_4px]"; // Polka dot
+                                if (day.status === 'yellow') bgClass = "bg-amber-400 rounded-sm bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[length:4px_4px]"; // Vertical stripes (subtle)
+                                if (day.status === 'red') bgClass = "bg-rose-500 rounded-sm bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.1)_25%,rgba(0,0,0,0.1)_50%,transparent_50%,transparent_75%,rgba(0,0,0,0.1)_75%,rgba(0,0,0,0.1)_100%)] bg-[length:6px_6px]"; // Diagonal stripes
 
                                 return (
                                     <div
                                         key={day.date.toISOString()}
-                                        className={cn("h-2 w-2 rounded-sm", bgClass)}
+                                        className={cn("h-3 w-3", bgClass)}
                                         title={`${format(day.date, 'dd.MM', { locale: dateLocale })}: ${day.score}`}
                                     />
                                 );
                             })}
                         </div>
-                    </div>
+                    </button>
                 ))}
             </div>
-        </div>
+        </div >
     );
 }

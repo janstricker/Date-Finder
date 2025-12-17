@@ -584,12 +584,14 @@ export function calculateMonthScores(
                 }
 
                 // Mud / Trail Conditions Analysis
-                if (dayWeather.mudIndex > 15) {
+                // v04: Volumetric Soil Moisture (m³/m³) from OpenMeteo
+                // Saturation is typically around 0.45-0.50.
+                if (dayWeather.mudIndex > 0.40) {
                     const penalty = -30;
                     score += penalty;
-                    reasons.push(t('reason.mud.very', { index: dayWeather.mudIndex.toFixed(1) }));
+                    reasons.push(t('reason.mud.very', { index: dayWeather.mudIndex.toFixed(2) }));
                     breakdown.push({ label: t('breakdown.mud'), value: penalty });
-                } else if (dayWeather.mudIndex > 5) {
+                } else if (dayWeather.mudIndex > 0.35) {
                     const penalty = -10;
                     score += penalty;
                     reasons.push(t('reason.mud'));

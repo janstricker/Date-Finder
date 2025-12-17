@@ -97,7 +97,7 @@ function LocationRouteTabs({ constraints, onUpdate, t, deriveStateCode }: {
                     </h3>
 
                     {!constraints.gpxData ? (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-center cursor-pointer relative group">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-emerald-500 hover:bg-emerald-50 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-colors text-center cursor-pointer relative group">
                             <input
                                 type="file"
                                 accept=".gpx"
@@ -292,28 +292,32 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                     <label className="text-sm font-medium text-gray-900">{t('config.eventDay')}</label>
 
                     <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${constraints.allowWeekends ? 'bg-slate-900 border-slate-900' : 'bg-white border-gray-300'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className="relative">
                                 <input
                                     type="checkbox"
-                                    className="hidden"
+                                    className="peer sr-only"
                                     checked={constraints.allowWeekends}
                                     onChange={(e) => onUpdate({ ...constraints, allowWeekends: e.target.checked })}
                                 />
-                                {constraints.allowWeekends && <Check className="w-3.5 h-3.5 text-white" />}
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:ring-offset-1 ${constraints.allowWeekends ? 'bg-slate-900 border-slate-900' : 'bg-white border-gray-300 group-hover:border-gray-400'}`}>
+                                    {constraints.allowWeekends && <Check className="w-3.5 h-3.5 text-white" />}
+                                </div>
                             </div>
                             <span className="text-gray-700">{t('config.weekends')}</span>
                         </label>
 
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${constraints.allowWeekdays ? 'bg-slate-900 border-slate-900' : 'bg-white border-gray-300'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className="relative">
                                 <input
                                     type="checkbox"
-                                    className="hidden"
+                                    className="peer sr-only"
                                     checked={constraints.allowWeekdays}
                                     onChange={(e) => onUpdate({ ...constraints, allowWeekdays: e.target.checked })}
                                 />
-                                {constraints.allowWeekdays && <Check className="w-3.5 h-3.5 text-white" />}
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:ring-offset-1 ${constraints.allowWeekdays ? 'bg-slate-900 border-slate-900' : 'bg-white border-gray-300 group-hover:border-gray-400'}`}>
+                                    {constraints.allowWeekdays && <Check className="w-3.5 h-3.5 text-white" />}
+                                </div>
                             </div>
                             <span className="text-gray-700">{t('config.weekdays')}</span>
                         </label>
@@ -466,7 +470,7 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                                         min="25"
                                         max="100"
                                         step="25"
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                                         value={constraints.conflictRadius || 50}
                                         onChange={(e) => onUpdate({ ...constraints, conflictRadius: parseInt(e.target.value) })}
                                     />
@@ -601,6 +605,10 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                                 <Switch
                                     checked={constraints.negativeHolidayImpact}
                                     onChange={(val) => onUpdate({ ...constraints, negativeHolidayImpact: val })}
+                                    // className="mt-0.5" // Passed as prop if Switch supports it, but standard Switch is self-contained. 
+                                    // Actually Switch component might need modification to accept className or we wrap it.
+                                    // Let's assume wrapper for now or edit Switch if needed. 
+                                    // The original code passed className="mt-0.5", let's keep it if Switch uses rest props.
                                     className="mt-0.5"
                                 />
                                 <div className="space-y-0.5">
