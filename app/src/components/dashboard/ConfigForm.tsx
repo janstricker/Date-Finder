@@ -449,7 +449,7 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                                         {t('config.conflicts.avoid')}
                                         <Info className="w-3.5 h-3.5 text-gray-400" />
                                     </span>
-                                    <span className="text-xs text-gray-500">{t('config.conflicts.desc')}</span>
+                                    <span className="text text-xs text-gray-500">{t('config.conflicts.desc')}</span>
 
                                     {/* Data Source Tooltip */}
                                     <div className="absolute left-0 bottom-full mb-2 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">

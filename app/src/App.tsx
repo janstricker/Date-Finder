@@ -8,6 +8,7 @@ import { DetailCard } from './components/dashboard/DetailCard';
 import { TopDaysList } from './components/dashboard/TopDaysList';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Footer } from './components/Footer';
+import { OnboardingModal } from './components/OnboardingModal';
 
 // Initial State: September 2026, Fichtelgebirge
 const defaultDate = new Date();
@@ -57,6 +58,20 @@ function FichtelPlanner() {
 
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null);
   const [isYearView, setIsYearView] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('fichtel_onboarding_seen');
+    if (!hasSeenOnboarding) {
+      // Small delay to ensure app is loaded visually
+      setTimeout(() => setShowOnboarding(true), 1000);
+    }
+  }, []);
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('fichtel_onboarding_seen', 'true');
+  };
 
   // loadingMessage is now available (and translated via key)
   const { scores, fullYearScores, loading, loadingMessage, error } = useAnalysis(constraints, conflictingEvents);
@@ -109,6 +124,7 @@ function FichtelPlanner() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} />}
       <div className="flex-grow p-6 md:p-12">
         <div className="max-w-6xl mx-auto space-y-6">
 
@@ -196,7 +212,7 @@ function FichtelPlanner() {
         </div>
       </div>
 
-      <Footer />
+      <Footer onShowOnboarding={() => setShowOnboarding(true)} />
     </div>
   )
 }

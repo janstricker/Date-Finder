@@ -198,7 +198,24 @@ export type TranslationKey =
     // Footer
     | 'footer.builtWith'
     | 'footer.rights'
-    ;
+    | 'footer.help'
+
+
+    // Onboarding
+    | 'onboarding.welcome.title'
+    | 'onboarding.welcome.desc'
+    | 'onboarding.location.title'
+    | 'onboarding.location.desc'
+    | 'onboarding.config.title'
+    | 'onboarding.config.desc'
+    | 'onboarding.analysis.title'
+    | 'onboarding.analysis.desc'
+    | 'onboarding.visualization.title'
+    | 'onboarding.visualization.desc'
+    | 'onboarding.next'
+    | 'onboarding.back'
+    | 'onboarding.finish'
+    | 'onboarding.skip';
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
     en: {
@@ -393,7 +410,29 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'top10.show_less': 'Show top 3 only',
 
         'footer.builtWith': 'Built with',
-        'footer.rights': 'All rights reserved.'
+        'footer.rights': 'All rights reserved.',
+        'footer.help': 'Help & Tour',
+
+        // Onboarding
+        'onboarding.welcome.title': 'Welcome to FichtelUltra Planner',
+        'onboarding.welcome.desc': 'Your comprehensive tool to find the perfect date for your FKT or Ultra run:\nAnalyze 10 years of historical weather data\nPredict the best conditions for your specific needs\nCompare different locations and timeframes',
+
+        'onboarding.location.title': 'Location & Route',
+        'onboarding.location.desc': 'Choose your target location\nSearch for a specific city\nUpload a GPX route for precise analysis along the track',
+
+        'onboarding.config.title': 'Set Your Parameters',
+        'onboarding.config.desc': 'Define race distance and timing\nSelect run style (Race vs Experience)\nAvoid conflicting events nearby\nConsider holidays and school vacations\nSet preparation and training time',
+
+        'onboarding.analysis.title': 'Smart Analysis',
+        'onboarding.analysis.desc': 'Temperature scoring\nWind risk assessment\nRain probability analysis\nDaylight availability check\nEstimated trail conditions (Mud Index)',
+
+        'onboarding.visualization.title': 'Find Your Day',
+        'onboarding.visualization.desc': 'View top 3 recommendations instantly\nUse Year Overview for long-term planning\nCheck Heatmap Calendar for specific dates\nClick any day for hourly weather details',
+
+        'onboarding.next': 'Next',
+        'onboarding.back': 'Back',
+        'onboarding.finish': 'Get Started',
+        'onboarding.skip': 'Skip'
     },
     de: {
         'app.title': 'FichtelUltra Planer',
@@ -401,7 +440,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'loading.analyzing': 'Analysiere...',
 
         'config.location': 'Ort',
-        'config.location.placeholder': 'Stadt suchen (z.B. Selb, Regensburg)...',
+        'config.location.placeholder': 'Ort suchen (z.B. Selb, Regensburg)...',
         'config.timing': 'Zeitplanung',
         'config.eventDay': 'Lauf-Tag',
         'config.weekends': 'Wochenende (Sa, So)',
@@ -546,7 +585,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'heatmap.noData': 'Keine Daten.',
         'heatmap.title': 'Heatmap',
 
-        'config.searchCity': 'Stadt suchen',
+        'config.searchCity': 'Ort suchen',
         'config.uploadRoute': 'Route hochladen',
         'config.gpx.route': 'GPX Route',
         'config.gpx.drop': 'Klicken zum Hochladen (.gpx)',
@@ -582,6 +621,28 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'top10.show_less': 'Nur Top 3 anzeigen',
 
         'footer.builtWith': 'Entwickelt mit',
-        'footer.rights': 'Alle Rechte vorbehalten.'
+        'footer.rights': 'Alle Rechte vorbehalten.',
+        'footer.help': 'Hilfe & Tour',
+
+        // Onboarding
+        'onboarding.welcome.title': 'Willkommen beim Laufevent Datumsfinder',
+        'onboarding.welcome.desc': 'Finde das perfekte Datum für dein Trailrunning Event.\nDas Tool analysiert alle relevanten Bedingungen, damit dem Sport nichts im Wege steht.',
+
+        'onboarding.location.title': 'Ort & Strecke',
+        'onboarding.location.desc': 'Suche einen Ort, oder lade eine GPX-Route hoch, um eine präzise Wettervorhersage für die Region zu erhalten.\nDas Tool analysiert 10 Jahre historische Wetterdaten und prüft die idealen Laufbedingungen.',
+
+        'onboarding.config.title': 'Deine Einstellungen',
+        'onboarding.config.desc': 'Definiere deine wichtigsten Rahmenbedingungen:\nWelche Wochentage kommen in Frage?\nWann ist Start und Cut-Off Zeit?\nWähle einen Laufstil: Wettkampf vs. Erlebnis\nChecke Feiertage, Ferien & Konflikte mit parallelen Events\nPlane Vorbereitungszeit zum Formaufbau mit ein',
+
+        'onboarding.analysis.title': 'Die Analyse',
+        'onboarding.analysis.desc': 'Das Tool berechnet einen Score aus:\nTemperatur & Wind\nRegenrisiko & Tageslicht\nMatsch-Index (Bodenfeuchte)\nAllen weiteren definierten Parametern',
+
+        'onboarding.visualization.title': 'Das Ergebnis',
+        'onboarding.visualization.desc': 'Die am besten geeigneten Tage des Jahres auf einen Blick\nTop Empfehlungen und Jahresübersicht\nDetaillierte Wetterdaten für alle Tage',
+
+        'onboarding.next': 'Weiter',
+        'onboarding.back': 'Zurück',
+        'onboarding.finish': 'Los geht\'s',
+        'onboarding.skip': 'Überspringen'
     }
 };

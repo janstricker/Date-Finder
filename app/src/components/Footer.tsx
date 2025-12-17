@@ -1,7 +1,11 @@
-import { Globe } from 'lucide-react';
+import { Globe, HelpCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-export function Footer() {
+interface FooterProps {
+    onShowOnboarding?: () => void;
+}
+
+export function Footer({ onShowOnboarding }: FooterProps) {
     const { language, setLanguage, t } = useLanguage();
 
     return (
@@ -15,18 +19,31 @@ export function Footer() {
                     <span>{t('footer.builtWith')} <span className="text-red-500">♥</span> & <span className="font-semibold text-gray-700">Gemini</span></span>
                 </div>
 
-                {/* Language Selector */}
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 shadow-sm">
-                        <Globe className="w-4 h-4 text-gray-400" />
-                        <select
-                            value={language}
-                            onChange={(e) => setLanguage(e.target.value as 'en' | 'de')}
-                            className="bg-transparent text-sm font-medium text-gray-700 focus:outline-none cursor-pointer pr-1"
+                <div className="flex items-center gap-4">
+                    {/* Help Button */}
+                    {onShowOnboarding && (
+                        <button
+                            onClick={onShowOnboarding}
+                            className="text-sm font-medium text-gray-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors"
                         >
-                            <option value="de">Deutsch</option>
-                            <option value="en">English</option>
-                        </select>
+                            <HelpCircle className="w-4 h-4" />
+                            {t('footer.help')}
+                        </button>
+                    )}
+
+                    {/* Language Selector */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 shadow-sm">
+                            <Globe className="w-4 h-4 text-gray-400" />
+                            <select
+                                value={language}
+                                onChange={(e) => setLanguage(e.target.value as 'en' | 'de')}
+                                className="bg-transparent text-sm font-medium text-gray-700 focus:outline-none cursor-pointer pr-1"
+                            >
+                                <option value="de">Deutsch</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
