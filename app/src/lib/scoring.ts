@@ -165,30 +165,79 @@ export function calculateMonthScores(
 
         // 1. Check Training Time (Optional)
         // If the user needs X weeks to train, and the date is sooner than that -> Fail.
+        // 1. Check Training Time (Improved Logic v03)
+        // If the user needs X weeks to train, and the date is sooner than that.
         const weeksAvailable = differenceInWeeks(currentDate, today);
         if (constraints.incorporateTrainingTime) {
-            if (weeksAvailable < constraints.minTrainingWeeks) {
-                const ratio = Math.max(0, weeksAvailable / constraints.minTrainingWeeks);
 
-                if (ratio < 0.5) {
-                    // Critical Failure (< 50% time)
-                    const penalty = -100;
-                    score = 0;
-                    reasons.push(t('reason.training.insufficient', { weeks: weeksAvailable, required: constraints.minTrainingWeeks }));
-                    breakdown.push({ label: t('breakdown.training'), value: penalty });
-                } else {
-                    // Soft Fail (50% - 99% time)
-                    // Linear penalty: -10 pts per 10% missing? 
-                    // Formula: Penalty = (1 - ratio) * 200 => 0.5 ratio -> 100 penalty? Too harsh.
-                    // User wants "visible comparable". 
-                    // Let's do: Penalty = - (1 - ratio) * 100.
-                    // Example: 90% time (ratio 0.9) -> -10 pts.
-                    // Example: 50% time (ratio 0.5) -> -50 pts.
-                    const penalty = Math.round(-(1 - ratio) * 100);
+            // A. Seasonality Factor (Winter Training Hardship)
+            // If the 3 months leading up to the race include Jan/Feb, we need more buffer.
+            // Simplified: If race is in Mar/Apr/May, training was in Winter.
+            const raceMonth = currentDate.getMonth(); // 0-11
+            let adjustedRequiredWeeks = constraints.minTrainingWeeks;
+            let seasonalityPenaltyApplied = false;
+
+            if (raceMonth >= 2 && raceMonth <= 4) { // Mar, Apr, May
+                adjustedRequiredWeeks = Math.ceil(constraints.minTrainingWeeks * 1.15);
+                seasonalityPenaltyApplied = true;
+            }
+
+            if (weeksAvailable < adjustedRequiredWeeks) {
+                // We have a shortage. Calculate ratio based on adjusted needs.
+                const ratio = Math.max(0, weeksAvailable / adjustedRequiredWeeks);
+
+                // B. Non-Linear Penalty Curve
+                // 85% - 100% -> No Penalty (Tapering Buffer / Flexibility)
+                // 50% - 85%  -> Quadratic Penalty
+                // < 50%      -> Crash Course (Severe Penalty but not 0)
+
+                if (ratio >= 0.85) {
+                    // Buffer Zone: No penalty, but maybe a small note if it was winter adjusted?
+                    if (seasonalityPenaltyApplied) {
+                        reasons.push(t('reason.training.winter'));
+                        breakdown.push({ label: t('breakdown.training.winter'), value: 0 });
+                    } else {
+                        breakdown.push({ label: t('breakdown.training'), value: 0 });
+                    }
+                } else if (ratio >= 0.5) {
+                    // Stress Zone: Quadratic Penalty
+                    // Range 0.5 to 0.85 (span 0.35) maps to Penalty.
+                    // Normalized dist from 0.85: (0.85 - ratio) / 0.35
+                    // e.g. ratio 0.85 -> 0
+                    // e.g. ratio 0.50 -> 1.0
+                    const normalized = (0.85 - ratio) / 0.35;
+                    const penalty = -Math.round(50 * (normalized * normalized)); // Max -50
+
                     score += penalty;
-                    reasons.push(t('reason.training.short', { percent: Math.round(ratio * 100) }));
-                    breakdown.push({ label: t('breakdown.shortTraining'), value: penalty });
+                    // Add explanation
+                    if (seasonalityPenaltyApplied) {
+                        reasons.push(t('reason.training.winter'));
+                        reasons.push(t('reason.training.short', { percent: Math.round(ratio * 100) }));
+                        breakdown.push({ label: t('breakdown.training.winter'), value: penalty });
+                    } else {
+                        reasons.push(t('reason.training.short', { percent: Math.round(ratio * 100) }));
+                        breakdown.push({ label: t('breakdown.shortTraining'), value: penalty });
+                    }
+
+                } else {
+                    // C. Crash Course Zone (< 50%)
+                    // User Review: "Don't forbid it, but warn heavily."
+                    const penalty = -80; // Severe, but allows score ~20 if everything else is perfect.
+                    score += penalty;
+
+                    reasons.push(t('reason.training.crashCourse'));
+
+                    if (seasonalityPenaltyApplied) {
+                        breakdown.push({ label: t('breakdown.training.winter'), value: penalty });
+                    } else {
+                        breakdown.push({ label: t('breakdown.training.crash'), value: penalty });
+                    }
                 }
+
+            } else {
+                // Even if we have enough time, if it was winter adjusted, maybe show we considered it?
+                // Not strictly necessary if score is 100.
+                breakdown.push({ label: t('breakdown.training'), value: 0 });
             }
         }
 

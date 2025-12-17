@@ -12,9 +12,19 @@ export function Header() {
                         <Mountain size={20} className="text-green-500" />
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">
-                            {t('header.brand')}
-                        </h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">
+                                {t('header.brand')}
+                            </h1>
+                            <a
+                                href="https://github.com/janstricker/Date-Finder"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 hover:text-blue-700 transition-colors uppercase tracking-wider translate-y-[1px]"
+                            >
+                                Beta
+                            </a>
+                        </div>
                         <span className="text-xs font-medium text-slate-500 tracking-wide">
                             {t('header.app')}
                         </span>

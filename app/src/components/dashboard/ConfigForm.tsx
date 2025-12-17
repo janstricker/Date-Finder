@@ -32,7 +32,7 @@ const GERMAN_STATES: Record<string, string> = {
     'Thüringen': 'TH'
 };
 
-const DISTANCE_OPTIONS = [5, 10, 21, 30, 42, 50, 68, 100];
+const DISTANCE_OPTIONS = [5, 10, 21, 30, 42, 50, 70, 100];
 const CUTOFF_OPTIONS = [2, 4, 6, 8, 10, 12, 14, 16, 18];
 
 // Sub-component for Location/Route Tabs
@@ -435,64 +435,65 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                 </div>
 
                 {/* 2. Conflicting Events Card */}
-                {/* 2. Conflicting Events Card */}
-                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Switch
-                                    checked={constraints.checkConflictingEvents}
-                                    onChange={(val) => onUpdate({ ...constraints, checkConflictingEvents: val })}
-                                />
-                                <div className="group relative cursor-help">
-                                    <span className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
-                                        {t('config.conflicts.avoid')}
-                                        <Info className="w-3.5 h-3.5 text-gray-400" />
-                                    </span>
-                                    <span className="text text-xs text-gray-500">{t('config.conflicts.desc')}</span>
+                <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center gap-3">
+                        <Switch
+                            checked={constraints.checkConflictingEvents}
+                            onChange={(val) => onUpdate({ ...constraints, checkConflictingEvents: val })}
+                        />
+                        <span className="text-base font-medium text-gray-900">
+                            {t('config.conflicts.avoid')}
+                        </span>
+                    </div>
 
-                                    {/* Data Source Tooltip */}
-                                    <div className="absolute left-0 bottom-full mb-2 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
-                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t('config.conflicts.dataSources')}</div>
-                                        <ul className="text-xs text-gray-300 space-y-1 list-disc list-inside">
-                                            <li><span className="text-white font-medium">Laufen.de</span></li>
-                                            <li><span className="text-white font-medium">Statistik DUV</span></li>
-                                        </ul>
+                    {constraints.checkConflictingEvents && (
+                        <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <div className="space-y-2">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-sm text-slate-500 block">
+                                        {t('config.conflicts.desc')}
+                                    </span>
+                                </div>
+
+                                {/* Radius Slider */}
+                                <div className="space-y-2 pt-2">
+                                    <div className="flex justify-between text-xs text-gray-500 font-medium">
+                                        <span>{t('config.conflicts.radius')}</span>
+                                        <span className="text-gray-900">{constraints.conflictRadius || 50} km</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="25"
+                                        max="100"
+                                        step="25"
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                        value={constraints.conflictRadius || 50}
+                                        onChange={(e) => onUpdate({ ...constraints, conflictRadius: parseInt(e.target.value) })}
+                                    />
+                                    <div className="flex justify-between text-[10px] text-gray-400">
+                                        <span>25km</span>
+                                        <span>50km</span>
+                                        <span>75km</span>
+                                        <span>100km</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Radius Slider (Only show if enabled) */}
-                        {constraints.checkConflictingEvents && (
-                            <div className="pl-12 pr-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="flex justify-between text-xs text-gray-500 mb-2 font-medium">
-                                    <span>{t('config.conflicts.radius')}</span>
-                                    <span className="text-gray-900">{constraints.conflictRadius || 50} km</span>
+                            {/* Metadata & Sources */}
+                            <div className="pt-2 border-t border-gray-200 text-[10px] text-gray-400 space-y-1">
+                                <div className="flex gap-1">
+                                    <span>{t('config.conflicts.dataSources')}:</span>
+                                    <a href="https://www.laufen.de/laufkalender" target="_blank" rel="noreferrer" className="hover:text-gray-600 underline">Laufen.de</a>
+                                    <span>&</span>
+                                    <a href="https://statistik.d-u-v.org/calendar.php?country=GER" target="_blank" rel="noreferrer" className="hover:text-gray-600 underline">Statistik DUV</a>
                                 </div>
-                                <input
-                                    type="range"
-                                    min="25"
-                                    max="100"
-                                    step="25"
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                    value={constraints.conflictRadius || 50}
-                                    onChange={(e) => onUpdate({ ...constraints, conflictRadius: parseInt(e.target.value) })}
-                                />
-                                <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                                    <span>25km</span>
-                                    <span>50km</span>
-                                    <span>75km</span>
-                                    <span>100km</span>
-                                </div>
+                                {dataLastUpdated && (
+                                    <div className="flex gap-2">
+                                        <span>{t('config.dataUpdated')} {new Date(dataLastUpdated).toLocaleDateString()}</span>
+                                        <span>{t('config.nextUpdate')} {new Date(new Date(dataLastUpdated).getTime() + 7 * 86400000).toLocaleDateString()}</span>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                    {/* Metadata */}
-                    {dataLastUpdated && (
-                        <div className="mt-3 pt-2 border-t border-gray-200 text-[10px] text-gray-400 flex gap-2">
-                            <span>{t('config.dataUpdated')} {new Date(dataLastUpdated).toLocaleDateString()}</span>
-                            <span>{t('config.nextUpdate')} {new Date(new Date(dataLastUpdated).getTime() + 7 * 86400000).toLocaleDateString()}</span>
                         </div>
                     )}
                 </div>
@@ -505,6 +506,15 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                             onChange={(val) => onUpdate({ ...constraints, incorporateTrainingTime: val })}
                         />
                         <span className="text-base font-medium text-gray-900">{t('config.prep.title')}</span>
+                        <div className="relative group cursor-help ml-1">
+                            <Info className="w-4 h-4 text-gray-400" />
+                            {/* Tooltip */}
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
+                                <p className="text-xs text-gray-300 leading-relaxed">
+                                    {t('config.prep.tooltip')}
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {constraints.incorporateTrainingTime && (

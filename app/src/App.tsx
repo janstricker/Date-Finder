@@ -28,7 +28,7 @@ function FichtelPlanner() {
     minTrainingWeeks: 24,
     raceStartTime: '07:00',
     raceDurationHours: 12,
-    distance: 68, // 68k
+    distance: 70,
     negativeHolidayImpact: true,
     incorporateTrainingTime: true,
     allowWeekends: true,
@@ -186,7 +186,7 @@ function FichtelPlanner() {
                   onClick={() => setIsYearView(true)}
                   className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
                 >
-                  ← Back to Year Overview
+                  {t('calendar.backToYear')}
                 </button>
               )}
 

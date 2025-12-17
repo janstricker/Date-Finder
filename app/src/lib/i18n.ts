@@ -50,6 +50,7 @@ export type TranslationKey =
     | 'config.persona.race.temp.idealRange'
     | 'config.persona.race.temp.penalty'
     | 'config.persona.race.temp.penaltyRange'
+    | 'config.prep.tooltip'
     | 'config.persona.experience.temp.desc'
     | 'config.persona.experience.temp.ideal'
     | 'config.persona.experience.temp.idealRange'
@@ -109,6 +110,8 @@ export type TranslationKey =
     // Scoring / Reasons
     | 'reason.training.insufficient'
     | 'reason.training.short'
+    | 'reason.training.winter'
+    | 'reason.training.crashCourse'
     | 'reason.blocked'
     | 'reason.conflict'
     | 'reason.holiday.negative'
@@ -141,11 +144,16 @@ export type TranslationKey =
     | 'reason.temp.expIdeal'
     | 'reason.rain.showers'
     | 'reason.rain.washout'
+    | 'reason.rain.washout'
     | 'reason.hypothermia'
+    | 'reason.training.winter'
+    | 'reason.training.crashCourse'
 
     // Breakdown Labels
     | 'breakdown.base'
     | 'breakdown.training'
+    | 'breakdown.training.winter'
+    | 'breakdown.training.crash'
     | 'breakdown.shortTraining'
     | 'breakdown.blocked'
     | 'breakdown.conflict'
@@ -161,6 +169,7 @@ export type TranslationKey =
     // Heatmap
     | 'heatmap.noData'
     | 'heatmap.title'
+    | 'calendar.backToYear'
 
     // GPX / Route
     | 'config.searchCity'
@@ -268,6 +277,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.prep.distance': 'Distance',
         'config.prep.trainingTime': 'Training Time',
         'config.prep.suggestion': 'Suggestion based on race distance',
+        'config.prep.tooltip': 'Accounts for tapering and seasonal difficulty.',
         'config.holidays': 'Public & School Holidays',
         'config.holidays.title': 'Public & School Holidays',
         'config.holidays.selectLocation': 'Select location',
@@ -297,7 +307,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'detail.daylight': 'Daylight & Race Time',
         'detail.trainingPrep': 'Training Prep',
         'detail.weeks': 'weeks',
-        'detail.avgTemp': 'Avg Temp (High/Low)',
+        'detail.avgTemp': 'Avg Air Temp (High/Low)',
         'detail.avgHumidity': 'Avg Humidity',
         'detail.gusts': 'Avg Max Gusts',
         'detail.rainRisk': 'Rain Risk',
@@ -334,6 +344,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'heatmap.title': 'Heatmap Calendar',
         'heatmap.noData': 'No data.',
+        'calendar.backToYear': '← Back to Year Overview',
 
         'config.searchCity': 'Search City',
         'config.uploadRoute': 'Upload Route',
@@ -364,6 +375,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'reason.training.insufficient': 'Not enough training time ({weeks} weeks vs {required} required)',
         'reason.training.short': 'Short Training Prep ({percent}% of recommended)',
+        'reason.training.winter': 'Winter Training (Requires buffer)',
+        'reason.training.crashCourse': 'Crash Course: High Injury Risk',
         'reason.blocked': 'Blocked Date',
         'reason.conflict': 'Event Conflict: {name} ({distance}km)',
         'reason.holiday.negative': 'Holiday (Negative Impact): {name}',
@@ -373,14 +386,14 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.weekday.notAllowed': 'Weekday (Not allowed)',
         'reason.darkness': 'Darkness',
         'reason.headlamp': 'Headlamp required',
-        'reason.temp.ideal': 'Ideal Temp ({temp}°C)',
-        'reason.temp.warm': 'Warm ({temp}°C)',
-        'reason.temp.hot': 'Hot ({temp}°C)',
-        'reason.temp.veryHot': 'Very Hot ({temp}°C)',
+        'reason.temp.ideal': 'Ideal Temp ({temp}°C Feels Like)',
+        'reason.temp.warm': 'Warm ({temp}°C Feels Like)',
+        'reason.temp.hot': 'Hot ({temp}°C Feels Like)',
+        'reason.temp.veryHot': 'Very Hot ({temp}°C Feels Like)',
         'reason.temp.humidHot': 'Humid & Hot ({temp}°C)',
-        'reason.temp.chilly': 'Chilly ({temp}°C)',
-        'reason.temp.freezing': 'Freezing ({temp}°C)',
-        'reason.temp.deepFreeze': 'Deep Freeze ({temp}°C)',
+        'reason.temp.chilly': 'Chilly ({temp}°C Feels Like)',
+        'reason.temp.freezing': 'Freezing ({temp}°C Feels Like)',
+        'reason.temp.deepFreeze': 'Deep Freeze ({temp}°C Feels Like)',
         'reason.windchill': ' + Windchill',
         'reason.severeWindchill': ' + Severe Windchill',
         'reason.cool': 'Cool ({temp}°C)',
@@ -392,7 +405,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.accum.cold': 'Acclimatization Risk (Sudden Cold)',
         'reason.mud.very': 'Very Muddy Trails (Index: {index})',
         'reason.mud': 'Muddy Trails',
-        'reason.temp.expIdeal': 'Ideal Experience Temp ({temp}°C)',
+        'reason.temp.expIdeal': 'Ideal Experience Temp ({temp}°C Feels Like)',
         'reason.darkness.headlamp': '{duration} Darkness (Headlamp required)',
         'reason.rain.showers': 'Showers likely (Short duration)',
         'reason.rain.washout': 'Washout Risk (Heavy/Long Rain)',
@@ -402,6 +415,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'breakdown.base': 'Base Score',
         'breakdown.training': 'Insufficient Training Time',
+        'breakdown.training.winter': 'Winter Training Adjustment',
+        'breakdown.training.crash': 'Crash Course Penalty',
         'breakdown.shortTraining': 'Short Training Prep',
         'breakdown.blocked': 'Blocked Date',
         'breakdown.conflict': 'Event Conflict',
@@ -494,6 +509,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.prep.distance': 'Distanz',
         'config.prep.trainingTime': 'Trainingszeit',
         'config.prep.suggestion': 'Vorschlag basierend auf Distanz',
+        'config.prep.tooltip': 'Berücksichtigt Tapering-Puffer und saisonale Erschwernis.',
         'config.holidays': 'Feiertage & Ferien',
         'config.holidays.title': 'Feiertage & Ferien',
         'config.holidays.selectLocation': 'Ort wählen',
@@ -520,7 +536,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'detail.daylight': 'Tageslicht',
         'detail.trainingPrep': 'Vorbereitung',
         'detail.weeks': 'Wochen',
-        'detail.avgTemp': 'Ø Temp (Hoch/Tief)',
+        'detail.avgTemp': 'Ø Luft-Temp (Hoch/Tief)',
         'detail.avgHumidity': 'Ø Luftfeuchte',
         'detail.gusts': 'Ø Max Böen',
         'detail.rainRisk': 'Regenrisiko',
@@ -563,6 +579,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'reason.training.insufficient': 'Nicht genug Trainingszeit ({weeks} Wochen vs {required} nötig)',
         'reason.training.short': 'Kurze Vorbereitung ({percent}% der Empfehlung)',
+        'reason.training.winter': 'Winter-Training (Benötigt Puffer)',
+        'reason.training.crashCourse': 'Crash-Kurs: Verletzungsrisiko!',
         'reason.blocked': 'Blockiertes Datum',
         'reason.conflict': 'Event Konflikt: {name} ({distance}km)',
         'reason.holiday.negative': 'Feiertag/Ferien (Negativ): {name}',
@@ -572,14 +590,14 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.weekday.notAllowed': 'Wochentag (Nicht erlaubt)',
         'reason.darkness': 'Dunkelheit',
         'reason.headlamp': 'Stirnlampe nötig',
-        'reason.temp.ideal': 'Ideal Temp ({temp}°C)',
-        'reason.temp.warm': 'Warm ({temp}°C)',
-        'reason.temp.hot': 'Heiß ({temp}°C)',
-        'reason.temp.veryHot': 'Sehr Heiß ({temp}°C)',
-        'reason.temp.humidHot': 'Schwül & Heiß ({temp}°C)',
-        'reason.temp.chilly': 'Frisch ({temp}°C)',
-        'reason.temp.freezing': 'Gefrierend ({temp}°C)',
-        'reason.temp.deepFreeze': 'Eiskalt ({temp}°C)',
+        'reason.temp.ideal': 'Ideal Temp ({temp}°C Gefühlt)',
+        'reason.temp.warm': 'Warm ({temp}°C Gefühlt)',
+        'reason.temp.hot': 'Heiß ({temp}°C Gefühlt)',
+        'reason.temp.veryHot': 'Sehr Heiß ({temp}°C Gefühlt)',
+        'reason.temp.humidHot': 'Schwül & Heiß ({temp}°C Gefühlt)',
+        'reason.temp.chilly': 'Frisch ({temp}°C Gefühlt)',
+        'reason.temp.freezing': 'Gefrierend ({temp}°C Gefühlt)',
+        'reason.temp.deepFreeze': 'Eiskalt ({temp}°C Gefühlt)',
         'reason.windchill': ' + Abkühlung durch Wind',
         'reason.severeWindchill': ' + Starker Abkühlung durch Wind',
         'reason.cool': 'Kühl ({temp}°C)',
@@ -591,7 +609,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.accum.cold': 'Akklimatisierungsrisiko (Kälte)',
         'reason.mud.very': 'Sehr matschige Trails (Index: {index})',
         'reason.mud': 'Matschige Trails',
-        'reason.temp.expIdeal': 'Ideale Komfort-Temperatur ({temp}°C)',
+        'reason.temp.expIdeal': 'Ideale Komfort-Temperatur ({temp}°C Gefühlt)',
         'reason.darkness.headlamp': '{duration} Dunkelheit (Stirnlampe nötig)',
         'reason.rain.showers': 'Schauer wahrscheinlich (Kurz)',
         'reason.rain.washout': 'Washout Risiko (Dauerregen/Starkregen)',
@@ -601,6 +619,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'breakdown.base': 'Basis Score',
         'breakdown.training': 'Zu wenig Trainingszeit',
+        'breakdown.training.winter': 'Winter-Training Anpassung',
+        'breakdown.training.crash': 'Crash-Kurs Strafe',
         'breakdown.shortTraining': 'Kurze Vorbereitung',
         'breakdown.blocked': 'Blockiert',
         'breakdown.conflict': 'Event Konflikt',
@@ -616,6 +636,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'heatmap.noData': 'Keine Daten.',
         'heatmap.title': 'Heatmap',
+        'calendar.backToYear': '← Zurück zur Jahresübersicht',
 
         'config.searchCity': 'Ort suchen',
         'config.uploadRoute': 'Route hochladen',
