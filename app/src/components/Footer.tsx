@@ -16,7 +16,7 @@ export function Footer({ onShowOnboarding }: FooterProps) {
                 <div className="text-sm text-gray-500 flex flex-col md:flex-row items-center gap-1 md:gap-4">
                     <span>&copy; {new Date().getFullYear()} FichtelUltra. {t('footer.rights')}</span>
                     <span className="hidden md:inline text-gray-300">|</span>
-                    <span>{t('footer.builtWith')} <span className="text-red-500">♥</span> & <span className="font-semibold text-gray-700">Gemini</span></span>
+                    <span>{t('footer.builtWith')} <span className="text-green-500">♥</span> & <span className="text-gray-700"><a href="https://antigravity.google/" target="_blank" rel="noopener noreferrer">Antigravity</a></span></span>
                 </div>
 
                 <div className="flex items-center gap-4">

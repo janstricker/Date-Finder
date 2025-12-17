@@ -8,6 +8,7 @@ import { DetailCard } from './components/dashboard/DetailCard';
 import { TopDaysList } from './components/dashboard/TopDaysList';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Footer } from './components/Footer';
+import { Header } from './components/Header';
 import { OnboardingModal } from './components/OnboardingModal';
 
 // Initial State: September 2026, Fichtelgebirge
@@ -124,6 +125,7 @@ function FichtelPlanner() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      <Header />
       {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} />}
       <div className="flex-grow p-6 md:p-12">
         <div className="max-w-6xl mx-auto space-y-6">

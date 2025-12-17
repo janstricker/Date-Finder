@@ -247,15 +247,15 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
 
                                             {dayScore.details.persona === 'competition' ? (
                                                 <div className="space-y-1">
-                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.race.temp.ideal')}</span><span>5°C - 12°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>0°C - 18°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.race.temp.penalty')}</span><span>&gt; 12°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.race.temp.ideal')}</span><span>{t('config.persona.race.temp.idealRange')}</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>{t('config.persona.race.temp.acceptableRange')}</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.race.temp.penalty')}</span><span>{t('config.persona.race.temp.penaltyRange')}</span></div>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-1">
-                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.experience.temp.ideal')}</span><span>15°C - 20°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>10°C - 25°C</span></div>
-                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.experience.temp.penalty')}</span><span>&lt; 15°C</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-emerald-400">{t('config.persona.experience.temp.ideal')}</span><span>{t('config.persona.experience.temp.idealRange')}</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-yellow-400">{t('detail.acceptable')}</span><span>{t('config.persona.experience.temp.acceptableRange')}</span></div>
+                                                    <div className="flex justify-between text-[10px]"><span className="text-rose-400">{t('config.persona.experience.temp.penalty')}</span><span>{t('config.persona.experience.temp.penaltyRange')}</span></div>
                                                 </div>
                                             )}
                                         </div>

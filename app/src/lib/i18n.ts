@@ -4,6 +4,8 @@ export type TranslationKey =
     // Common
     | 'app.title'
     | 'app.subtitle'
+    | 'header.brand'
+    | 'header.app'
     | 'loading.analyzing'
     // Config Form
     | 'config.location'
@@ -53,6 +55,10 @@ export type TranslationKey =
     | 'config.persona.experience.temp.idealRange'
     | 'config.persona.experience.temp.penalty'
     | 'config.persona.experience.temp.penaltyRange'
+    | 'config.persona.experience.temp.penalty'
+    | 'config.persona.experience.temp.penaltyRange'
+    | 'config.persona.race.temp.acceptableRange'
+    | 'config.persona.experience.temp.acceptableRange'
     // Detail Card
     | 'detail.match'
     | 'detail.analysis'
@@ -219,8 +225,11 @@ export type TranslationKey =
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
     en: {
-        'app.title': 'FichtelUltra Planner',
-        'app.subtitle': 'Find the perfect date for your Fichtelgebirge run.',
+        'app.title': 'Date-Finder',
+
+        'app.subtitle': 'Find the perfect date for your trail running event.',
+        'header.brand': 'Date-Finder',
+        'header.app': 'FichtelUltra',
         'loading.analyzing': 'Analyzing...',
 
         'config.location': 'Location',
@@ -270,6 +279,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.persona.experience.temp.idealRange': '15-22°C',
         'config.persona.experience.temp.penalty': 'Penalty',
         'config.persona.experience.temp.penaltyRange': '< 10°C or > 25°C',
+        'config.persona.race.temp.acceptableRange': '0°C - 18°C',
+        'config.persona.experience.temp.acceptableRange': '10°C - 25°C',
 
         // Scoring - standardized to reason.* and breakdown.*
         // Removed scoring.* block to avoid duplicates.
@@ -435,8 +446,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'onboarding.skip': 'Skip'
     },
     de: {
-        'app.title': 'FichtelUltra Planer',
+        'app.title': 'Laufevent Datumsfinder',
         'app.subtitle': 'Finde das perfekte Datum für deinen Lauf.',
+
+        'header.brand': 'Laufevent Datumsfinder',
+        'header.app': 'FichtelUltra',
         'loading.analyzing': 'Analysiere...',
 
         'config.location': 'Ort',
@@ -486,6 +500,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.persona.experience.temp.idealRange': '15-22°C',
         'config.persona.experience.temp.penalty': 'Strafe',
         'config.persona.experience.temp.penaltyRange': '< 10°C oder > 25°C',
+        'config.persona.race.temp.acceptableRange': '0°C - 18°C',
+        'config.persona.experience.temp.acceptableRange': '10°C - 25°C',
 
         'detail.match': 'Match',
         'detail.analysis': 'Analyse',
