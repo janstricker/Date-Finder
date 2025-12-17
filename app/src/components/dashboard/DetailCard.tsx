@@ -17,12 +17,12 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
     const dateLocale = language === 'de' ? de : enUS;
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg top-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">{format(dayScore.date, 'EEEE, d. MMMM', { locale: dateLocale })}</h2>
                     <div className="group relative inline-block">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide mt-1 cursor-help
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold tracking-wide mt-1 cursor-help
                     ${dayScore.status === 'green' ? 'bg-emerald-100 text-emerald-700' : ''}
                     ${dayScore.status === 'yellow' ? 'bg-amber-100 text-amber-700' : ''}
                     ${dayScore.status === 'red' ? 'bg-rose-100 text-rose-700' : ''}
@@ -35,7 +35,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                         </span>
                         {/* Breakdown Tooltip */}
                         <div className="absolute left-0 top-full mt-2 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                            <div className="text-xs font-semibold mb-2 text-gray-300 uppercase tracking-wider border-b border-white/20 pb-1">{t('detail.scoreFormula')}</div>
+                            <div className="text-xs font-semibold mb-2 text-gray-300 tracking-wider border-b border-white/20 pb-1">{t('detail.scoreFormula')}</div>
                             <div className="space-y-1.5">
                                 {dayScore.breakdown?.map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center text-xs">
@@ -74,7 +74,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                 <div className="space-y-4">
                     {/* Reasons */}
                     <div className="space-y-2">
-                        <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wider">{t('detail.summary')}</h3>
+                        <h3 className="text-xs font-semibold text-gray-400 tracking-wider">{t('detail.summary')}</h3>
                         {dayScore.reasons.length > 0 ? (
                             <ul className="space-y-1">
                                 {dayScore.reasons.map((reason, i) => {
@@ -343,7 +343,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                 {dayScore.details.weather.history && (
                                     <div className="col-span-2 mt-6 pt-6 border-t border-gray-100">
                                         <div className="flex justify-between items-end mb-4">
-                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('detail.historyContext')}</h4>
+                                            <h4 className="text-xs font-semibold text-gray-500 tracking-wider">{t('detail.historyContext')}</h4>
                                             <div className="flex gap-4">
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></div><span className="text-[10px] text-gray-500">{t('detail.graph.temp')}</span></div>
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-blue-400 rounded-sm"></div><span className="text-[10px] text-gray-500">{t('detail.graph.rain')}</span></div>

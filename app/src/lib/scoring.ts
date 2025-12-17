@@ -367,76 +367,61 @@ export function calculateMonthScores(
             const dayWeather = weatherData[dateKey];
 
             if (dayWeather) {
-                // Temp Analysis
-                const temp = dayWeather.avgMaxTemp;
-                const humidity = dayWeather.avgHumidity;
-                const wind = dayWeather.maxWindSpeed;
+                // v03 Update: Use Apparent Temperature (Feels Like) for all checks
+                const temp = dayWeather.avgApparentTemp;
+                // Fallback if not available (during migration) handled in weather.ts, but safe to assume here.
 
-                // Humidity Adjustment
-                // const effectiveTemp = (humidity > 70) ? temp + 3 : temp; // Unused in new logic, removed to fix lint.
+                // Humidity is implicitly handled by Apparent Temp now.
 
                 let tempPenalty = 0;
                 let tempLabel = t('reason.temp.ideal', { temp: temp.toFixed(1) });
-                let windPenalty = 0; // Lifted scope
 
                 // --- PERSONA BASED LOGIC ---
                 const isCompetition = constraints.persona === 'competition';
 
                 if (isCompetition) {
-                    // Default Scenarios (Competition)
-                    // Ideal: 5 - 12
-                    // Warm > 12 -> 18
-                    // Hot > 18 -> 25
-                    // Very Hot > 25
+                    // Competition Mode (Performance Focus)
+                    // Ideal: 5 - 12°C (Apparent)
+                    // Warm: > 12
+                    // Hot: > 18
+                    // Very Hot: > 25
                     if (temp >= 5 && temp <= 12) {
                         tempPenalty = 0;
                         tempLabel = t('reason.temp.ideal', { temp: temp.toFixed(1) });
                     } else if (temp > 12) {
-                        const limitWarm = (humidity > 70) ? 15 : 18;
-                        const limitHot = (humidity > 70) ? 22 : 25;
-
-                        if (temp <= limitWarm) {
+                        if (temp <= 18) {
                             tempPenalty = -10;
                             tempLabel = t('reason.temp.warm', { temp: temp.toFixed(1) });
-                        } else if (temp <= limitHot) {
+                        } else if (temp <= 25) {
                             tempPenalty = -20;
-                            tempLabel = (humidity > 70) ? t('reason.temp.humidHot', { temp: temp.toFixed(1) }) : t('reason.temp.hot', { temp: temp.toFixed(1) });
+                            tempLabel = t('reason.temp.hot', { temp: temp.toFixed(1) });
                         } else {
                             tempPenalty = -30;
                             tempLabel = t('reason.temp.veryHot', { temp: temp.toFixed(1) });
                         }
                     } else {
-                        // Cold side (stays same for now for competition)
-                        const isWindy = wind > 20;
+                        // Cold side
                         if (temp >= 0) {
                             tempPenalty = -10;
                             tempLabel = t('reason.temp.chilly', { temp: temp.toFixed(1) });
-                            if (isWindy) { windPenalty = -10; tempLabel += t('reason.windchill'); }
                         } else if (temp >= -5) {
                             tempPenalty = -20;
                             tempLabel = t('reason.temp.freezing', { temp: temp.toFixed(1) });
-                            if (isWindy) { // Fix: windPenalty logic inside block
-                                windPenalty = -15;
-                                tempLabel += t('reason.severeWindchill');
-                            }
                         } else {
                             tempPenalty = -30;
                             tempLabel = t('reason.temp.deepFreeze', { temp: temp.toFixed(1) });
                         }
                     }
                 } else {
-                    // EXPERIENCE Mode Scenarios
-                    // Ideal: 15 - 20 (Warmer is better)
-                    // Cool: 10 - 15 (Acceptable)
-                    // Cold: < 10 (Penalty)
-                    // Hot: > 25 (Still bad)
-
-                    if (temp >= 15 && temp <= 22) { // Expanding slightly to 22 as "nice warm"
+                    // Experience Mode (Comfort Focus)
+                    // Ideal: 15 - 22°C (Apparent)
+                    // Cool: 10 - 15
+                    // Cold: < 10
+                    // Hot: > 26
+                    if (temp >= 15 && temp <= 22) {
                         tempPenalty = 0;
                         tempLabel = t('reason.temp.expIdeal', { temp: temp.toFixed(1) });
                     } else if (temp > 22) {
-                        // const limitHot = 28; // Unused, removed.
-
                         if (temp <= 26) {
                             tempPenalty = -10;
                             tempLabel = t('reason.temp.warm', { temp: temp.toFixed(1) });
@@ -453,22 +438,13 @@ export function calculateMonthScores(
                             tempPenalty = -20;
                             tempLabel = t('reason.temp.chilly', { temp: temp.toFixed(1) });
                         } else {
-                            tempPenalty = -40; // Experience hikers hate freezing
+                            tempPenalty = -40;
                             tempLabel = t('reason.tooCold', { temp: temp.toFixed(1) });
                         }
                     }
-
-                    // Apply wind penalty for experience mode
-                    if (temp < 15 && wind > 20) {
-                        windPenalty = -10;
-                        tempLabel += t('reason.wind');
-                    }
                 }
 
-                // Apply wind penalty
-                tempPenalty += windPenalty;
-
-
+                // Apply Temp Penalty
                 if (tempPenalty !== 0) {
                     score += tempPenalty;
                     reasons.push(tempLabel);
@@ -478,7 +454,7 @@ export function calculateMonthScores(
                 }
 
                 // Temp Stability Analysis (Diurnal Range)
-                const tempSwing = dayWeather.avgMaxTemp - dayWeather.avgMinTemp;
+                const tempSwing = dayWeather.avgMaxTemp - dayWeather.avgMinTemp; // Keep using Air Temp for swing
                 if (tempSwing > 15) {
                     const stabilityPenalty = -15;
                     score += stabilityPenalty;
@@ -488,39 +464,74 @@ export function calculateMonthScores(
                     breakdown.push({ label: t('breakdown.stability'), value: 0 });
                 }
 
-                // Rain Risk Analysis (Probability)
-                if (dayWeather.rainProbability > 50) {
-                    const penalty = -40;
-                    score += penalty;
-                    reasons.push(t('reason.rainRisk.high', { prob: Math.round(dayWeather.rainProbability) }));
-                    breakdown.push({ label: t('breakdown.rain'), value: penalty });
-                }
+                // --- Rain / Hypothermia Logic (Review v03) ---
 
-                // Acclimatization Risk (Seasonality Heuristic)
-                // "If preparation was in cold season and event is warm -> Penalty"
-                // "If preparation was in warm season and event is cold -> Penalty"
-                const month = currentDate.getMonth(); // 0 = Jan
+                // 1. Hypothermia Risk ("Killer Combo")
+                // Rule: Cold (< 5°C Apparent) AND Wet (> 40% Chance)
+                const isCold = temp < 5;
+                const isWetRisk = dayWeather.rainProbability > 40;
 
-                // Heat Shock Risk: Event in Spring (Apr-Jun), implies Prep in Winter/Early Spring
-                if (month >= 3 && month <= 5) { // Apr, May, Jun
-                    if (temp > 15) {
-                        score -= 10;
-                        reasons.push(t('reason.accum.heat'));
-                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
-                    }
-                }
+                let rainPenalty = 0;
+                let rainLabel = '';
 
-                // Cold Shock Risk: Event in Autumn (Sep-Nov), implies Prep in Summer
-                if (month >= 8 && month <= 10) { // Sep, Oct, Nov
-                    if (temp < 5) {
-                        score -= 10;
-                        reasons.push(t('reason.accum.cold'));
-                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
-                    } else {
-                        breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
-                    }
+                if (isCold && isWetRisk) {
+                    rainPenalty = -50; // Massive Penalty
+                    rainLabel = t('reason.hypothermia');
+                    breakdown.push({ label: t('breakdown.hypothermia'), value: rainPenalty });
+                    score += rainPenalty;
+                    reasons.push(rainLabel);
                 } else {
-                    breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
+                    // 2. Standard Rain Logic (Nuanced)
+                    // Check for Washout vs Showers
+
+                    const pDuration = dayWeather.avgPrecipHours || 0;
+                    const pAmount = dayWeather.avgPrecipitation;
+                    const pProb = dayWeather.rainProbability;
+
+                    // Washout Condition:
+                    // Duration > 4 hours OR Amount > 5mm (regardless of probability? No, likely if probability is significant)
+                    // Let's assume High Probability for Washout check is implicit if we rely on averages, 
+                    // but we should check probability too to avoid penalizing a "rare tropical storm" risk heavily if it's 10%.
+                    // Actually averages include the 0s. 
+
+                    // Logic from plan:
+                    // Showers: High Prob (>50%) AND (Low Duration < 3h OR Low Amount < 5mm)
+                    // Washout: High Duration (>4h) OR High Amount (>5mm)
+
+                    // Actually, if avgAmount is > 5mm, that implies it rains A LOT on average. That's bad.
+
+                    if (pAmount > 5 || pDuration > 4) {
+                        // WASHOUT
+                        // Only apply full penalty if probability is distinct? 
+                        // If avg is high, it rains often.
+                        rainPenalty = -40;
+                        rainLabel = t('reason.rain.washout');
+                        score += rainPenalty;
+                        reasons.push(rainLabel);
+                        breakdown.push({ label: t('breakdown.washout'), value: rainPenalty });
+                    } else if (pProb > 40) { // Lowered threshold slightly for "Showers" to capture more risks, or keep 50?
+                        // SHOWERS
+                        // It's likely to rain (40%+), but amount/duration are low (otherwise caught above).
+
+                        // Scale penalty for "Showers" to be linear(ish)?
+                        // 40% -> -5
+                        // 60% -> -10
+                        // 100% -> -20
+                        // Formula: -5 - (pProb - 40) * 0.25 ?
+
+                        // Plan said: "High Prob -> Low Penalty (-10)".
+                        // Let's stick to -15 max for showers to differentiate from washout (-40).
+                        rainPenalty = -15;
+                        rainLabel = t('reason.rain.showers');
+                        score += rainPenalty;
+                        reasons.push(rainLabel);
+                        breakdown.push({ label: t('breakdown.rain'), value: rainPenalty });
+                    } else {
+                        breakdown.push({ label: t('breakdown.rain'), value: 0 });
+                    }
+
+                    // Hypothermia breakdown entry handled in else block? No, if we didn't enter hypothermia block.
+                    breakdown.push({ label: t('breakdown.hypothermia'), value: 0 });
                 }
 
                 // Mud / Trail Conditions Analysis
@@ -536,6 +547,27 @@ export function calculateMonthScores(
                     breakdown.push({ label: t('breakdown.mud'), value: penalty });
                 } else {
                     breakdown.push({ label: t('breakdown.mud'), value: 0 });
+                }
+
+                // Acclimatization Risk (Seasonality)
+                // Apparent Temp logic for acclim
+                const month = currentDate.getMonth();
+                if (month >= 3 && month <= 5) { // Spring
+                    if (temp > 15) { // Sudden Heat
+                        score -= 10;
+                        reasons.push(t('reason.accum.heat'));
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
+                    }
+                } else if (month >= 8 && month <= 10) { // Autumn
+                    if (temp < 5) { // Sudden Cold
+                        score -= 10;
+                        reasons.push(t('reason.accum.cold'));
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: -10 });
+                    } else {
+                        breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
+                    }
+                } else {
+                    breakdown.push({ label: t('breakdown.acclimatization'), value: 0 });
                 }
             }
         }

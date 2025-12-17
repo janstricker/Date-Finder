@@ -138,7 +138,7 @@ function FichtelPlanner() {
             </div>
 
             {/* Right Col: The Big Calendar */}
-            <div className="lg:col-span-7 space-y-6 relative">
+            <div className="lg:col-span-7 space-y-6 relative lg:sticky lg:top-6 lg:self-start">
               {loading && (
                 <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                   <div className="flex flex-col items-center gap-2">

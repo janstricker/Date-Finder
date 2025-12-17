@@ -139,6 +139,9 @@ export type TranslationKey =
     | 'reason.mud.very'
     | 'reason.mud'
     | 'reason.temp.expIdeal'
+    | 'reason.rain.showers'
+    | 'reason.rain.washout'
+    | 'reason.hypothermia'
 
     // Breakdown Labels
     | 'breakdown.base'
@@ -170,6 +173,9 @@ export type TranslationKey =
     | 'config.gpx.tip'
     | 'config.gpx.analysisActive'
     | 'config.gpx.runAnalysis'
+
+    | 'breakdown.hypothermia'
+    | 'breakdown.washout'
 
     // Misc
     | 'detail.close'
@@ -388,6 +394,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.mud': 'Muddy Trails',
         'reason.temp.expIdeal': 'Ideal Experience Temp ({temp}°C)',
         'reason.darkness.headlamp': '{duration} Darkness (Headlamp required)',
+        'reason.rain.showers': 'Showers likely (Short duration)',
+        'reason.rain.washout': 'Washout Risk (Heavy/Long Rain)',
+        'reason.hypothermia': 'HYPOTHERMIA RISK (Cold & Wet)',
+        'breakdown.hypothermia': 'Hypothermia Risk',
+        'breakdown.washout': 'Washout Penalty',
 
         'breakdown.base': 'Base Score',
         'breakdown.training': 'Insufficient Training Time',
@@ -493,12 +504,12 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.persona.race.temp.desc': 'Hitze > 12°C hat negativen Einfluss auf Bewertung',
         'config.persona.race.temp.ideal': 'Ideal',
         'config.persona.race.temp.idealRange': '5-12°C',
-        'config.persona.race.temp.penalty': 'Strafe',
+        'config.persona.race.temp.penalty': 'Ungeeignet',
         'config.persona.race.temp.penaltyRange': '> 12°C oder < 0°C',
         'config.persona.experience.temp.desc': 'Kälte < 10°C hat negativen Einfluss auf Bewertung, Wärme wird bevorzugt',
         'config.persona.experience.temp.ideal': 'Ideal',
         'config.persona.experience.temp.idealRange': '15-22°C',
-        'config.persona.experience.temp.penalty': 'Strafe',
+        'config.persona.experience.temp.penalty': 'Ungeeignet',
         'config.persona.experience.temp.penaltyRange': '< 10°C oder > 25°C',
         'config.persona.race.temp.acceptableRange': '0°C - 18°C',
         'config.persona.experience.temp.acceptableRange': '10°C - 25°C',
@@ -582,6 +593,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'reason.mud': 'Matschige Trails',
         'reason.temp.expIdeal': 'Ideale Komfort-Temperatur ({temp}°C)',
         'reason.darkness.headlamp': '{duration} Dunkelheit (Stirnlampe nötig)',
+        'reason.rain.showers': 'Schauer wahrscheinlich (Kurz)',
+        'reason.rain.washout': 'Washout Risiko (Dauerregen/Starkregen)',
+        'reason.hypothermia': 'HYPOTHERMIE RISIKO (Kalt & Nass)',
+        'breakdown.hypothermia': 'Hypothermie Risiko',
+        'breakdown.washout': 'Washout Strafe',
 
         'breakdown.base': 'Basis Score',
         'breakdown.training': 'Zu wenig Trainingszeit',

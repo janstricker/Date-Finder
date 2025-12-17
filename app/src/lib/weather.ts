@@ -21,6 +21,8 @@ export interface WeatherStats {
     maxWindSpeed: number;
     /** Average daily precipitation sum (mm) */
     avgPrecipitation: number;
+    /** Average daily precipitation hours (h) */
+    avgPrecipHours: number;
     /** Probability of experiencing >1mm of rain (%) */
     rainProbability: number; // % chance of >1mm rain
     /** Probability of experiencing >5mm of rain (%) */
@@ -30,6 +32,8 @@ export interface WeatherStats {
      * Higher values indicate potentially muddy ground conditions.
      */
     mudIndex: number; // Avg 3-day trailing rainfall
+    /** Average Apparent ("Feels Like") Max Temperature (°C) */
+    avgApparentTemp: number;
     /** Raw historical data points used for these averages (aggregates from last 10 years) */
     history: {
         /** Daily max temperatures for each of the last 10 years */
@@ -42,6 +46,10 @@ export interface WeatherStats {
         humidities: number[];
         /** Daily max wind speeds for each of the last 10 years */
         winds: number[];
+        /** Daily apparent max temperatures */
+        apparentTemps: number[];
+        /** Daily precipitation hours */
+        precipHours: number[];
     };
 }
 
@@ -99,26 +107,21 @@ export async function fetchRouteYearlyHistory(
         let sumHumidity = 0;
         let sumMaxWind = 0;
         let sumPrecip = 0;
+        let sumPrecipHours = 0;
         let sumRainProb = 0;
         let sumHeavyRainProb = 0;
         let sumMud = 0;
+        let sumApparent = 0;
         let count = allStats.length;
 
-        // History aggregation (concatenation? or average traces?)
-        // For graphs, averaging the traces is best to show "Mean Conditions".
-        // But arrays might be different lengths if missing data? 
-        // implementation ensures same length (based on daysInPastYear).
-
-        // Let's create empty arrays for "Avg History" of length 10 (years)
-        // Actually history is daily values for 10 years... 
-        // "temps" is array of daily max temps for that specific day across 10 years.
-
-        // We need to initialize history accumulators
+        // History aggregation
         const histTemps: number[] = new Array(allStats[0][dateKey].history.temps.length).fill(0);
         const histTempsMin: number[] = new Array(allStats[0][dateKey].history.tempsMin.length).fill(0);
         const histRain: number[] = new Array(allStats[0][dateKey].history.rain.length).fill(0);
         const histHumid: number[] = new Array(allStats[0][dateKey].history.humidities.length).fill(0);
         const histWinds: number[] = new Array(allStats[0][dateKey].history.winds.length).fill(0);
+        const histApparent: number[] = new Array(allStats[0][dateKey].history.apparentTemps ? allStats[0][dateKey].history.apparentTemps.length : 0).fill(0);
+        const histPrecipHours: number[] = new Array(allStats[0][dateKey].history.precipHours ? allStats[0][dateKey].history.precipHours.length : 0).fill(0);
 
         allStats.forEach(statMap => {
             const day = statMap[dateKey];
@@ -133,12 +136,22 @@ export async function fetchRouteYearlyHistory(
             sumHeavyRainProb += day.heavyRainProbability;
             sumMud += day.mudIndex;
 
+            // New fields (safeguard against partial types if any)
+            const dAny = day as any;
+            const dApparent = dAny.avgApparentTemp !== undefined ? dAny.avgApparentTemp : day.avgMaxTemp;
+            const dPrecipH = dAny.avgPrecipHours !== undefined ? dAny.avgPrecipHours : 0;
+
+            sumApparent += dApparent;
+            sumPrecipHours += dPrecipH;
+
             // History Summation
             day.history.temps.forEach((v, k) => histTemps[k] += v);
             day.history.tempsMin.forEach((v, k) => histTempsMin[k] += v);
             day.history.rain.forEach((v, k) => histRain[k] += v);
             day.history.humidities.forEach((v, k) => histHumid[k] += v);
             day.history.winds.forEach((v, k) => histWinds[k] += v);
+            if (day.history.apparentTemps) day.history.apparentTemps.forEach((v, k) => histApparent[k] += v);
+            if (day.history.precipHours) day.history.precipHours.forEach((v, k) => histPrecipHours[k] += v);
         });
 
         averaged[dateKey] = {
@@ -147,6 +160,8 @@ export async function fetchRouteYearlyHistory(
             avgHumidity: sumHumidity / count,
             maxWindSpeed: sumMaxWind / count, // Average representation of windiness across route
             avgPrecipitation: sumPrecip / count,
+            avgPrecipHours: sumPrecipHours / count,
+            avgApparentTemp: sumApparent / count,
             rainProbability: sumRainProb / count, // Avg risk
             heavyRainProbability: sumHeavyRainProb / count,
             mudIndex: sumMud / count,
@@ -155,7 +170,9 @@ export async function fetchRouteYearlyHistory(
                 tempsMin: histTempsMin.map(v => v / count),
                 rain: histRain.map(v => v / count),
                 humidities: histHumid.map(v => v / count),
-                winds: histWinds.map(v => v / count)
+                winds: histWinds.map(v => v / count),
+                apparentTemps: histApparent.map(v => v / count),
+                precipHours: histPrecipHours.map(v => v / count)
             }
         };
     });
@@ -169,9 +186,9 @@ export async function fetchLocationYearlyHistory(
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
-    // Cache Key: e.g. "weather_v2_50.1234_11.5678_2025"
+    // Cache Key: e.g. "weather_v5_50.1234_11.5678_2025"
     // Using 4 decimal places gives precision of ~11m, sufficient for weather grid
-    const cacheKey = `weather_v2_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
+    const cacheKey = `weather_v5_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
 
     // 1. Try LocalStorage Cache
     try {
@@ -194,7 +211,9 @@ export async function fetchLocationYearlyHistory(
         humidities: number[],
         winds: number[],
         rains: number[],
-        trailingRains: number[]
+        trailingRains: number[],
+        apparentTemps: number[],
+        precipHours: number[]
     }> = {};
 
     // Helper to generate MM-DD keys
@@ -215,7 +234,7 @@ export async function fetchLocationYearlyHistory(
     // We iterate 2024 (a leap year) to get all 366 buckets
     const tempDate = new Date(2024, 0, 1);
     while (tempDate.getFullYear() === 2024) {
-        dailyStats[getDayKey(tempDate)] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [] };
+        dailyStats[getDayKey(tempDate)] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [], apparentTemps: [], precipHours: [] };
         tempDate.setDate(tempDate.getDate() + 1);
     }
 
@@ -233,25 +252,42 @@ export async function fetchLocationYearlyHistory(
         const startDate = new Date(pastYear, 0, 1 - leadDays);
         const startStr = getFullDateKey(startDate);
 
-        // Open-Meteo Archive data is only reliably available for completed past years.
-        // We skip the current year to avoid "future date" errors (400 Bad Request) 
-        // and data lag issues.
+        // Open-Meteo Archive data is only reliable up to ~5 days ago.
         const currentRealYear = new Date().getFullYear();
-        if (pastYear >= currentRealYear) {
-            continue;
+        if (pastYear > currentRealYear) {
+            continue; // Future years obviously explicitly skipped (though loop logic prevents this usually)
         }
 
-        // Construct end date: Dec 31
-        const endDate = new Date(pastYear, 11, 31);
-        const endStr = getFullDateKey(endDate);
+        // Determine request End Date
+        let endDate = new Date(pastYear, 11, 31);
 
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
+        // If we are fetching the current year, we must cap the end date to avoid "future" errors
+        if (pastYear === currentRealYear) {
+            const safeEndDate = new Date();
+            safeEndDate.setDate(safeEndDate.getDate() - 5); // 5 day lag buffer
+
+            // If the year hasn't even started or is just starting (e.g. Jan 2), this might result in startDate > safeEndDate
+            // In that case, we skip.
+            if (startDate > safeEndDate) continue;
+
+            if (safeEndDate < endDate) {
+                endDate = safeEndDate;
+            }
+        }
+
+        const endStr = getFullDateKey(endDate);
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_hours,relative_humidity_2m_mean,wind_speed_10m_max&timezone=auto`;
 
         // Sequential Fetch to respect API rate limits (avoid 429)
         const res = await fetch(url).then(async r => {
             if (r.status === 429) {
                 console.warn('Rate limited, skipping year', pastYear);
                 throw new Error('API Rate Limit Exceeded (429)');
+            }
+            if (!r.ok) {
+                const text = await r.text();
+                console.error(`API Error ${r.status} for year ${pastYear}:`, text);
+                throw new Error(`API Error ${r.status}`);
             }
             return r.json();
         }).catch(err => {
@@ -307,6 +343,10 @@ export async function fetchLocationYearlyHistory(
 
                 const tempMax = getWindowAvg(daily.temperature_2m_max);
                 const tempMin = getWindowAvg(daily.temperature_2m_min);
+                // New logic: Apparent Temp
+                const apparentTemp = getWindowAvg(daily.apparent_temperature_max);
+                const precipH = getWindowAvg(daily.precipitation_hours);
+
                 const humidity = getWindowAvg(daily.relative_humidity_2m_mean);
                 const wind = getWindowAvg(daily.wind_speed_10m_max);
                 const rain = getWindowAvg(daily.precipitation_sum);
@@ -335,6 +375,8 @@ export async function fetchLocationYearlyHistory(
                 // Push to aggregators
                 if (tempMax !== null) dailyStats[key].tempsMax.push(tempMax);
                 if (tempMin !== null) dailyStats[key].tempsMin.push(tempMin);
+                if (apparentTemp !== null) dailyStats[key].apparentTemps.push(apparentTemp);
+                if (precipH !== null) dailyStats[key].precipHours.push(precipH);
                 if (humidity !== null) dailyStats[key].humidities.push(humidity);
                 if (wind !== null) dailyStats[key].winds.push(wind);
                 if (rain !== null) dailyStats[key].rains.push(rain);
@@ -343,7 +385,7 @@ export async function fetchLocationYearlyHistory(
         }
 
         // Polite delay
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 400));
     }
 
     // --- Final Aggregation ---
@@ -367,6 +409,8 @@ export async function fetchLocationYearlyHistory(
             // Averages
             const avgMaxTemp = stats.tempsMax.reduce((a, b) => a + b, 0) / count;
             const avgMinTemp = stats.tempsMin.length > 0 ? stats.tempsMin.reduce((a, b) => a + b, 0) / stats.tempsMin.length : avgMaxTemp - 10;
+            const avgApparent = stats.apparentTemps.length > 0 ? stats.apparentTemps.reduce((a, b) => a + b, 0) / stats.apparentTemps.length : avgMaxTemp;
+            const avgPrecipH = stats.precipHours.length > 0 ? stats.precipHours.reduce((a, b) => a + b, 0) / stats.precipHours.length : 0;
             const avgHumidity = stats.humidities.length > 0 ? stats.humidities.reduce((a, b) => a + b, 0) / stats.humidities.length : 50;
             const avgMaxWind = stats.winds.length > 0 ? stats.winds.reduce((a, b) => a + b, 0) / stats.winds.length : 0;
             const avgRain = stats.rains.reduce((a, b) => a + b, 0) / count;
@@ -379,6 +423,8 @@ export async function fetchLocationYearlyHistory(
             weatherMap[targetDateKey] = {
                 avgMaxTemp,
                 avgMinTemp,
+                avgApparentTemp: avgApparent,
+                avgPrecipHours: avgPrecipH,
                 avgHumidity,
                 maxWindSpeed: avgMaxWind,
                 avgPrecipitation: avgRain,
@@ -390,7 +436,9 @@ export async function fetchLocationYearlyHistory(
                     tempsMin: stats.tempsMin,
                     rain: stats.rains,
                     humidities: stats.humidities,
-                    winds: stats.winds
+                    winds: stats.winds,
+                    apparentTemps: stats.apparentTemps,
+                    precipHours: stats.precipHours
                 }
             };
         }
