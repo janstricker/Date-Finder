@@ -586,7 +586,7 @@ export function calculateMonthScores(
                 // Mud / Trail Conditions Analysis
                 // v04: Volumetric Soil Moisture (m³/m³) from OpenMeteo
                 // Saturation is typically around 0.45-0.50.
-                if (dayWeather.mudIndex > 0.40) {
+                if (dayWeather.mudIndex > 0.45) {
                     const penalty = -30;
                     score += penalty;
                     reasons.push(t('reason.mud.very', { index: dayWeather.mudIndex.toFixed(2) }));

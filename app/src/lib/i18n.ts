@@ -195,6 +195,7 @@ export type TranslationKey =
     | 'loading.fetching_history'
     | 'loading.analyzing_year'
     | 'error.analysis_failed'
+    | 'error.rateLimit'
 
     // Top 10 List
     | 'top10.title'
@@ -435,6 +436,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'loading.fetching_history': 'Fetching yearly weather history...',
         'loading.analyzing_year': 'Analyzing full year...',
         'error.analysis_failed': 'Failed to load weather data. Please check your connection or try again later.',
+        'error.rateLimit': 'Rate limit exceeded (Too many requests). Please wait a minute before trying again.',
 
         'top10.title': 'Best Days',
         'top10.rank': 'Rank',
@@ -662,6 +664,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'loading.fetching_history': 'Lade Wetterhistorie (ganzes Jahr)...',
         'loading.analyzing_year': 'Analysiere das komplette Jahr...',
         'error.analysis_failed': 'Fehler beim Laden der Wetterdaten. Bitte prüfen Sie Ihre Verbindung oder versuchen Sie es später noch einmal.',
+        'error.rateLimit': 'Zu viele Anfragen (Rate Limit). Bitte probiere es in einigen Stunden noch einmal.',
 
         'top10.title': 'Beste Tage',
         'top10.rank': 'Rang',

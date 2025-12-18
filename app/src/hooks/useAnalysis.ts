@@ -136,9 +136,15 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                     setFullYearScores(allScores);
                 }
 
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Analysis failed - check network or rate limits", e);
-                if (mounted) setError('error.analysis_failed');
+                if (mounted) {
+                    if (e.message && e.message.includes('Rate Limit')) {
+                        setError('error.rateLimit');
+                    } else {
+                        setError('error.analysis_failed');
+                    }
+                }
             } finally {
                 if (mounted) {
                     setLoading(false);

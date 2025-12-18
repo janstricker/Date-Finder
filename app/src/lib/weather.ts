@@ -292,6 +292,10 @@ export async function fetchLocationYearlyHistory(
             return r.json();
         }).catch(err => {
             console.error('Failed to fetch weather year', pastYear, err);
+            // Critical: Propagate Rate Limit errors so UI can show specific warning
+            if (err.message && err.message.includes('Rate Limit')) {
+                throw err;
+            }
             return null;
         });
 

@@ -296,7 +296,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                                 <p className="text-[10px] leading-relaxed text-gray-300">{t('detail.mudIndex.desc')}</p>
                                                 <div className="mt-2 pt-2 border-t border-white/20 flex justify-between items-center">
                                                     <span className="text-[10px] text-gray-400">{t('detail.indexScore')}</span>
-                                                    <span className="text-xs font-mono font-medium text-emerald-400">{dayScore.details.weather.mudIndex.toFixed(1)}</span>
+                                                    <span className="text-xs font-mono font-medium text-emerald-400">{dayScore.details.weather.mudIndex.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -304,10 +304,10 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                             const mud = dayScore.details.weather.mudIndex;
                                             let label = t('detail.mud.perfect');
                                             let color = 'text-emerald-600';
-                                            if (mud > 0.40) { label = t('detail.mud.veryMuddy'); color = 'text-red-600'; }
+                                            if (mud > 0.45) { label = t('detail.mud.veryMuddy'); color = 'text-red-600'; }
                                             else if (mud > 0.35) { label = t('detail.mud.muddy'); color = 'text-orange-600'; }
-                                            else if (mud > 0.25) { label = t('detail.mud.damp'); color = 'text-yellow-600'; }
-                                            else if (mud > 0.15) { label = t('detail.mud.good'); color = 'text-emerald-500'; }
+                                            else if (mud > 0.30) { label = t('detail.mud.damp'); color = 'text-yellow-600'; }
+                                            else if (mud > 0.20) { label = t('detail.mud.good'); color = 'text-emerald-500'; }
                                             return <div className={`text-xs font-bold ${color}`}>{label}</div>;
                                         })()}
                                     </div>
@@ -316,10 +316,10 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                             const mud = dayScore.details.weather!.mudIndex;
                                             let currentLevel = 1;
                                             // Volumetric Water Content 0-0.5 typical range
-                                            if (mud > 0.40) currentLevel = 5;      // Saturation
+                                            if (mud > 0.45) currentLevel = 5;      // Saturation
                                             else if (mud > 0.35) currentLevel = 4; // Very Wet
-                                            else if (mud > 0.25) currentLevel = 3; // Field Capacity
-                                            else if (mud > 0.15) currentLevel = 2; // Moist
+                                            else if (mud > 0.30) currentLevel = 3; // Field Capacity
+                                            else if (mud > 0.20) currentLevel = 2; // Moist
 
                                             const active = step <= currentLevel;
                                             let stepColor = 'bg-gray-100';
