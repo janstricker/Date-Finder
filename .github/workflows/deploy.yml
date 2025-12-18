@@ -49,6 +49,7 @@ jobs:
           # Improve connection stability
           protocol: ftps
           security: loose
+          timeout: 300000   # Set timeout to 5 minutes
           # CRITICAL: Prevent overwriting the database we are generating on the server
           exclude: |
             api/weather.db
