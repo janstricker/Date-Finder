@@ -126,6 +126,7 @@ try {
 
         if ($httpCode === 429) {
             $logs[] = "⚠️ Rate Limited on $lat, $lng. Retrying next batch.";
+            $rateLimited = true;
             break; // Stop batch
         }
 
@@ -181,7 +182,7 @@ try {
     }
 
     echo json_encode([
-        'status' => 'ok',
+        'status' => isset($rateLimited) && $rateLimited ? 'rate_limit' : 'ok',
         'processed' => $processed,
         'total' => count($points),
         'logs' => $logs
