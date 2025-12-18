@@ -25,14 +25,6 @@ jobs:
           cd app
           npm ci
 
-      - name: 📅 Fetch Latest Events (Puppeteer)
-        run: |
-          cd app
-          npm run fetch-events
-        env:
-          # Puppeteer needs this in CI
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: false
-
       - name: 🏗️ Build App
         run: |
           cd app
@@ -46,10 +38,7 @@ jobs:
           cp -r app/dist/* deploy/
           # Copy Backend
           cp -r backend/* deploy/api/
-          # Events JSON is already in dist/data/events.json from build step (public folder) or needs copying?
-          # fetch-events writes to public/data/events.json. Vite build copies public/* to dist/*. 
-          # So it's already in deploy/data/events.json via the cp app/dist command.
-      
+
       - name: 🚀 Upload to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -57,6 +46,9 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy/
+          # Improve connection stability
+          protocol: futp
+          security: strict
           # CRITICAL: Prevent overwriting the database we are generating on the server
           exclude: |
             api/weather.db
