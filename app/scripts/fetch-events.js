@@ -218,7 +218,7 @@ async function scrapeLaufenDe(browser) {
                     location = location.replace(/^\d{5}\s+/, '');
 
                     const link = el.getAttribute('href');
-                    const url = link ? (link.startsWith('http') ? link : `https://www.laufen.de/${link}`) : '';
+                    const url = link ? (link.startsWith('http') ? link : new URL(link, 'https://www.laufen.de/').href) : '';
 
                     // Check for Fichtel debug
                     let debugDateRaw = dateText;

@@ -91,7 +91,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                                 <span className="flex items-center gap-1">
                                                     {t('detail.conflictPrefix')}
                                                     <a
-                                                        href={conflict.url}
+                                                        href={conflict.url.includes('laufen.de') && !conflict.url.includes('laufen.de/') ? conflict.url.replace('laufen.de', 'laufen.de/') : conflict.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="text-blue-600 hover:underline hover:text-blue-800 transition-colors"
