@@ -48,7 +48,7 @@ jobs:
           local-dir: ./deploy/
           # Improve connection stability
           protocol: ftps
-          security: strict
+          security: loose
           # CRITICAL: Prevent overwriting the database we are generating on the server
           exclude: |
             api/weather.db
