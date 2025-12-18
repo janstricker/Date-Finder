@@ -20,6 +20,8 @@ export interface Holiday {
 // Simple in-memory cache
 const cache: Record<string, Holiday[]> = {};
 
+import { isConsentGiven } from './consent';
+
 /**
  * Fetches all holidays (Public + School) for a given year and state.
  * Results are cached in-memory to prevent redundant network requests during repeated scoring calls.
@@ -29,6 +31,7 @@ const cache: Record<string, Holiday[]> = {};
  * @returns A flat list of Holiday objects, where ranges (like school breaks) are expanded into individual days.
  */
 export async function fetchHolidays(year: number, stateCode: string = 'BY'): Promise<Holiday[]> {
+    if (!isConsentGiven()) throw new Error('GDPR_CONSENT_REQUIRED');
     const cacheKey = `${year}-${stateCode}`;
     if (cache[cacheKey]) {
         return cache[cacheKey];

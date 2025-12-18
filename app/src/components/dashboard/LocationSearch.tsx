@@ -16,15 +16,30 @@ export function LocationSearch({ initialName = '', onLocationSelect }: LocationS
     const [loading, setLoading] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
+    const [searchError, setSearchError] = useState<string | null>(null);
+
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(async () => {
             if (query.length >= 2) {
                 setLoading(true);
-                const data = await searchLocation(query);
-                setResults(data);
-                setLoading(false);
-                setIsOpen(true);
+                setSearchError(null);
+                try {
+                    const data = await searchLocation(query);
+                    setResults(data);
+                    setIsOpen(true);
+                } catch (e: any) {
+                    if (e.message === 'GDPR_CONSENT_REQUIRED') {
+                        setSearchError('consent_required');
+                        setIsOpen(true); // Open to show error
+                        setResults([]);
+                    } else {
+                        console.error(e);
+                        setResults([]);
+                    }
+                } finally {
+                    setLoading(false);
+                }
             } else {
                 setResults([]);
                 setIsOpen(false);
@@ -77,31 +92,34 @@ export function LocationSearch({ initialName = '', onLocationSelect }: LocationS
                 )}
             </div>
 
-            {/* Dropdown */}
-            {isOpen && results.length > 0 && (
+            {/* Dropdown Results & Errors */}
+            {isOpen && query.length >= 2 && !loading && (
                 <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-100 max-h-60 overflow-y-auto">
-                    {results.map((loc) => (
-                        <button
-                            key={loc.id}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 group transition-colors"
-                            onClick={() => handleSelect(loc)}
-                        >
-                            <MapPin className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                            <div>
-                                <span className="font-medium text-gray-700">{loc.name}</span>
-                                <span className="text-xs text-gray-400 ml-2">
-                                    {loc.admin1 ? `${loc.admin1}, ` : ''}{loc.country}
-                                </span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            {/* No Results Message */}
-            {isOpen && query.length >= 2 && results.length === 0 && !loading && (
-                <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-100 p-3 text-center">
-                    <span className="text-sm text-gray-500">{t('search.noResults.germany')}</span>
+                    {searchError === 'consent_required' ? (
+                        <div className="p-3 text-center text-sm text-amber-700 bg-amber-50">
+                            {t('error.consent_required')}
+                        </div>
+                    ) : results.length > 0 ? (
+                        results.map((loc) => (
+                            <button
+                                key={loc.id}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 group transition-colors"
+                                onClick={() => handleSelect(loc)}
+                            >
+                                <MapPin className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
+                                <div>
+                                    <span className="font-medium text-gray-700">{loc.name}</span>
+                                    <span className="text-xs text-gray-400 ml-2">
+                                        {loc.admin1 ? `${loc.admin1}, ` : ''}{loc.country}
+                                    </span>
+                                </div>
+                            </button>
+                        ))
+                    ) : (
+                        <div className="p-3 text-center">
+                            <span className="text-sm text-gray-500">{t('search.noResults.germany')}</span>
+                        </div>
+                    )}
                 </div>
             )}
 

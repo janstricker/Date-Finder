@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useConsent } from '../context/ConsentContext'; // Import useConsent
 import type { EventConstraints, DayScore } from '../lib/scoring';
 import { fetchLocationYearlyHistory, fetchRouteYearlyHistory, type WeatherStats } from '../lib/weather';
 import { fetchHolidays } from '../lib/holidays';
@@ -7,6 +8,7 @@ import { calculateMonthScores } from '../lib/scoring';
 
 export function useAnalysis(constraints: EventConstraints, conflictingEvents: any[] = []) {
     const { t } = useLanguage();
+    const { hasConsent } = useConsent(); // Subscribe to consent changes
 
     // State
     const [scores, setScores] = useState<DayScore[]>([]); // Current month scores
@@ -141,6 +143,8 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                 if (mounted) {
                     if (e.message && e.message.includes('Rate Limit')) {
                         setError('error.rateLimit');
+                    } else if (e.message === 'GDPR_CONSENT_REQUIRED') {
+                        setError('error.consent_required');
                     } else {
                         setError('error.analysis_failed');
                     }
@@ -179,7 +183,8 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
         // Ideally use deep compare or simple length/first-point check to avoid excessive loops
         // JSON stringify is a cheap way for small arrays of points
         constraints.gpxData ? JSON.stringify(constraints.gpxData.sampledPoints) : null,
-        constraints.gpxData?.ready // Re-run when ready flag toggles
+        constraints.gpxData?.ready, // Re-run when ready flag toggles
+        hasConsent // Re-run when consent changes
     ]);
 
     return {

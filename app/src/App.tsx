@@ -10,14 +10,19 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { OnboardingModal } from './components/OnboardingModal';
+import { ConsentProvider, useConsent } from './context/ConsentContext';
+
 
 // Initial State: September 2026, Fichtelgebirge
 const defaultDate = new Date();
 defaultDate.setMonth(defaultDate.getMonth() + 3);
 defaultDate.setDate(1); // Start of month
 
+
+
 function FichtelPlanner() {
   const { t } = useLanguage();
+  const { giveConsent } = useConsent();
 
   const [constraints, setConstraints] = useState<EventConstraints>({
     // Default to September 2026
@@ -60,18 +65,27 @@ function FichtelPlanner() {
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null);
   const [isYearView, setIsYearView] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showConsentStep, setShowConsentStep] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('fichtel_onboarding_seen');
     if (!hasSeenOnboarding) {
       // Small delay to ensure app is loaded visually
-      setTimeout(() => setShowOnboarding(true), 1000);
+      setTimeout(() => {
+        setShowConsentStep(true);
+        setShowOnboarding(true);
+      }, 1000);
     }
   }, []);
 
   const handleOnboardingClose = () => {
     setShowOnboarding(false);
     localStorage.setItem('fichtel_onboarding_seen', 'true');
+  };
+
+  const handleShowOnboardingManual = () => {
+    setShowConsentStep(false);
+    setShowOnboarding(true);
   };
 
   // loadingMessage is now available (and translated via key)
@@ -126,7 +140,7 @@ function FichtelPlanner() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
       <Header />
-      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} />}
+      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} showConsent={showConsentStep} />}
       <div className="flex-grow p-6 md:p-12">
         <div className="max-w-6xl mx-auto space-y-6">
 
@@ -159,12 +173,21 @@ function FichtelPlanner() {
                     <span className="text-sm font-semibold text-red-800">
                       {t(error as any)}
                     </span>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
-                    >
-                      Reload App
-                    </button>
+                    {error === 'error.consent_required' ? (
+                      <button
+                        onClick={giveConsent}
+                        className="text-xs px-3 py-1.5 bg-blue-600 border border-blue-600 rounded-md text-white hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                      >
+                        {t('consent.accept')}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
+                      >
+                        Reload App
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -214,7 +237,7 @@ function FichtelPlanner() {
         </div>
       </div>
 
-      <Footer onShowOnboarding={() => setShowOnboarding(true)} />
+      <Footer onShowOnboarding={handleShowOnboardingManual} />
     </div>
   )
 }
@@ -222,7 +245,9 @@ function FichtelPlanner() {
 function App() {
   return (
     <LanguageProvider>
-      <FichtelPlanner />
+      <ConsentProvider>
+        <FichtelPlanner />
+      </ConsentProvider>
     </LanguageProvider>
   );
 }

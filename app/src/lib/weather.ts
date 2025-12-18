@@ -5,6 +5,8 @@
  * for a specific location and month, aggregating data from the past 10 years.
  */
 
+import { isConsentGiven } from './consent';
+
 
 /**
  * Represents the aggregated weather statistics for a specific calendar day
@@ -78,6 +80,8 @@ export async function fetchRouteYearlyHistory(
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
+    if (!isConsentGiven()) throw new Error('GDPR_CONSENT_REQUIRED');
+
     // 1. Fetch data for ALL points
     const allStats: Record<string, WeatherStats>[] = [];
 
@@ -186,6 +190,8 @@ export async function fetchLocationYearlyHistory(
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
+    if (!isConsentGiven()) throw new Error('GDPR_CONSENT_REQUIRED');
+
     // Cache Key: e.g. "weather_v6_50.1234_11.5678_2025"
     // Using 4 decimal places gives precision of ~11m, sufficient for weather grid
     const cacheKey = `weather_v6_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;

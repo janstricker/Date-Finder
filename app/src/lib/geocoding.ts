@@ -16,6 +16,8 @@ export interface GeoLocation {
     admin1?: string; // State/Region
 }
 
+import { isConsentGiven } from './consent';
+
 /**
  * Searches for a location by name.
  * 
@@ -23,6 +25,7 @@ export interface GeoLocation {
  * @returns A list of matching locations (max 5) with coordinates and administrative info.
  */
 export async function searchLocation(query: string): Promise<GeoLocation[]> {
+    if (!isConsentGiven()) throw new Error('GDPR_CONSENT_REQUIRED');
     if (query.length < 2) return [];
 
     try {

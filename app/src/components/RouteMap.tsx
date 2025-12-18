@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GPXPoint } from '../lib/gpx';
+import { useLanguage } from '../context/LanguageContext';
+import { useConsent } from '../context/ConsentContext';
 
 // Fix Leaflet Default Icon issue in Webpack/Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,6 +32,9 @@ function MapUpdater({ track }: { track: GPXPoint[] }) {
 }
 
 export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPointsChange }) => {
+    const { t } = useLanguage();
+    const { hasConsent } = useConsent();
+
     // Convert track to Leaflet LatLngExpression[]
     const polylinePositions = useMemo(() =>
         track.map(p => [p.lat, p.lng] as [number, number]),
@@ -39,12 +44,6 @@ export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPoin
     const handleDragEnd = (index: number, e: L.DragEndEvent) => {
         const marker = e.target;
         const position = marker.getLatLng();
-
-        // Find nearest actual point on track? 
-        // For simplicity, we just take the new coord, assuming user drags to "somewhere else" 
-        // potentially off-track if they want nearby city weather.
-        // BUT for a "Route" prediction, snapping to track might be better. 
-        // Ideally we snap to nearest track point for elevation data integrity.
 
         // Let's implement Snap-to-Track logic for data consistency (elevation is needed!)
         let bestP = track[0];
@@ -62,11 +61,20 @@ export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPoin
         const updated = [...sampledPoints];
         updated[index] = bestP; // Snap to track
         onPointsChange(updated);
-
-        // Reset marker to snapped pos visually (React will re-render)
     };
 
     if (track.length === 0) return null;
+
+    if (!hasConsent) {
+        return (
+            <div className="h-64 w-full rounded-lg border border-gray-200 shadow-sm bg-gray-50 flex items-center justify-center flex-col gap-2">
+                <span className="text-gray-400 text-sm">Map disabled (GDPR)</span>
+                <span className="text-xs text-gray-400 max-w-xs text-center">
+                    Accept privacy terms to load OpenStreetMap tiles.
+                </span>
+            </div>
+        );
+    }
 
     return (
         <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm z-0">
