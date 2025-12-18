@@ -47,7 +47,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy/
           # Improve connection stability
-          protocol: futp
+          protocol: ftps
           security: strict
           # CRITICAL: Prevent overwriting the database we are generating on the server
           exclude: |
