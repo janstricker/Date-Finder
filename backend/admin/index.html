@@ -136,7 +136,7 @@
         let offset = 0;
         let total = 0;
         let errors = 0;
-        const BATCH_SIZE = 5; // Process 5 points per request
+        const BATCH_SIZE = 2; // Process 2 points per request (Safe for shared hosting)
         const DELAY_MS = 300; // Client-side delay between batches
 
         function log(msg) {

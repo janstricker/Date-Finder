@@ -7,7 +7,12 @@
  */
 
 header('Content-Type: application/json');
-set_time_limit(120); // 2 mins max per batch
+
+// Enable error reporting for debugging but keep JSON clean
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+set_time_limit(120); // 2 minutes
+ini_set('memory_limit', '256M');
 
 // --- CONFIGURATION ---
 // Bounding Box: Bavaria (Generous)
