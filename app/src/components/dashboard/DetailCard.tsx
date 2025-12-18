@@ -542,7 +542,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
                                                                     {/* Tooltip */}
                                                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max bg-slate-900 text-white text-[10px] p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                                                                         <div className="font-bold border-b border-white/20 pb-1 mb-1 text-center">
-                                                                            {dayScore.date.getFullYear() - 10 + i}
+                                                                            {history.years ? history.years[i] : (dayScore.date.getFullYear() - count + i)}
                                                                         </div>
                                                                         <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-right">
                                                                             <span className="text-left text-orange-300">{t('detail.tooltip.temp')}</span>
@@ -561,7 +561,7 @@ export function DetailCard({ dayScore, onClose }: DetailCardProps) {
 
                                                                     {/* X-Axis Label */}
                                                                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-gray-400 font-medium opacity-50 group-hover:opacity-100 group-hover:text-gray-900">
-                                                                        {dayScore.date.getFullYear() - 10 + i}
+                                                                        {history.years ? history.years[i] : (dayScore.date.getFullYear() - count + i)}
                                                                     </div>
                                                                 </div>
                                                             ))}

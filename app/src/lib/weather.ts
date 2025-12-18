@@ -38,6 +38,8 @@ export interface WeatherStats {
     avgApparentTemp: number;
     /** Raw historical data points used for these averages (aggregates from last 10 years) */
     history: {
+        /** Explicit years for each data point */
+        years?: number[];
         /** Daily max temperatures for each of the last 10 years */
         temps: number[];
         /** Daily min temperatures for each of the last 10 years */
@@ -184,266 +186,40 @@ export async function fetchRouteYearlyHistory(
     return averaged;
 }
 
+/**
+ * Fetches historical weather data from the self-hosted backend.
+ * 
+ * @param lat - Latitude of the location
+ * @param lng - Longitude of the location
+ * @param year - The target year (e.g. 2025)
+ * @returns A map of "YYYY-MM-DD" -> WeatherStats
+ */
 export async function fetchLocationYearlyHistory(
     lat: number,
     lng: number,
     year: number,
     onProgress?: (msg: string) => void
 ): Promise<Record<string, WeatherStats>> {
-    if (!isConsentGiven()) throw new Error('GDPR_CONSENT_REQUIRED');
+    const start = performance.now();
+    if (onProgress) onProgress('Fetching from Local Server...');
 
-    // Cache Key: e.g. "weather_v6_50.1234_11.5678_2025"
-    // Using 4 decimal places gives precision of ~11m, sufficient for weather grid
-    const cacheKey = `weather_v6_${lat.toFixed(4)}_${lng.toFixed(4)}_${year}`;
-
-    // 1. Try LocalStorage Cache
     try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            console.log('Weather Cache Hit:', cacheKey);
-            return JSON.parse(cached);
+        // DEV MODE: Assume running PHP built-in server on port 8000
+        // PROD MODE: This should be configurable or relative to domain
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_BASE}/weather.php?lat=${lat}&lng=${lng}&year=${year}`);
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `Server Error ${res.status}`);
         }
+
+        const data = await res.json();
+        console.log(`Backend Fetch took ${(performance.now() - start).toFixed(0)}ms`);
+
+        return data as Record<string, WeatherStats>;
     } catch (e) {
-        console.warn('Failed to read from localStorage', e);
-    }
-
-    const currentYear = year; // Base year (e.g. 2026)
-
-    // We collect data for every possible day of the year (1-366 to cover leap years)
-    // Key: "MM-DD" string (e.g. "01-01")
-    const dailyStats: Record<string, {
-        tempsMax: number[],
-        tempsMin: number[],
-        humidities: number[],
-        winds: number[],
-        rains: number[],
-        trailingRains: number[], // We keep naming it 'trailingRains' for compatibility/laziness in struct but it stores mudIndex
-        apparentTemps: number[],
-        precipHours: number[]
-    }> = {};
-
-    // Helper to generate MM-DD keys
-    const getDayKey = (date: Date) => {
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${m}-${d}`;
-    };
-
-    const getFullDateKey = (date: Date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    };
-
-    // Initialize dailyStats for all days in a leap year (just to be safe)
-    // We iterate 2024 (a leap year) to get all 366 buckets
-    const tempDate = new Date(2024, 0, 1);
-    while (tempDate.getFullYear() === 2024) {
-        dailyStats[getDayKey(tempDate)] = { tempsMax: [], tempsMin: [], humidities: [], winds: [], rains: [], trailingRains: [], apparentTemps: [], precipHours: [] };
-        tempDate.setDate(tempDate.getDate() + 1);
-    }
-
-    // Config
-    const leadDays = 5; // Buffer for Mud Index
-    const windowSize = 2; // ±2 days smoothing
-
-    // Fetch oldest to newest for chronological order (Limit 10 years back)
-    for (let i = 10; i >= 1; i--) {
-        const pastYear = currentYear - i;
-
-        if (onProgress) onProgress(String(pastYear));
-
-        // Construct start date: Jan 1 minus leadDays
-        const startDate = new Date(pastYear, 0, 1 - leadDays);
-        const startStr = getFullDateKey(startDate);
-
-        // Open-Meteo Archive data is only reliable up to ~5 days ago.
-        const currentRealYear = new Date().getFullYear();
-        if (pastYear > currentRealYear) {
-            continue; // Future years obviously explicitly skipped (though loop logic prevents this usually)
-        }
-
-        // Determine request End Date
-        let endDate = new Date(pastYear, 11, 31);
-
-        // If we are fetching the current year, we must cap the end date to avoid "future" errors
-        if (pastYear === currentRealYear) {
-            const safeEndDate = new Date();
-            safeEndDate.setDate(safeEndDate.getDate() - 5); // 5 day lag buffer
-
-            // If the year hasn't even started or is just starting (e.g. Jan 2), this might result in startDate > safeEndDate
-            // In that case, we skip.
-            if (startDate > safeEndDate) continue;
-
-            if (safeEndDate < endDate) {
-                endDate = safeEndDate;
-            }
-        }
-
-        const endStr = getFullDateKey(endDate);
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_hours,relative_humidity_2m_mean,wind_speed_10m_max,soil_moisture_0_to_7cm_mean&timezone=auto`;
-
-        // Sequential Fetch to respect API rate limits (avoid 429)
-        const res = await fetch(url).then(async r => {
-            if (r.status === 429) {
-                console.warn('Rate limited, skipping year', pastYear);
-                throw new Error('API Rate Limit Exceeded (429)');
-            }
-            if (!r.ok) {
-                const text = await r.text();
-                console.error(`API Error ${r.status} for year ${pastYear}:`, text);
-                throw new Error(`API Error ${r.status}`);
-            }
-            return r.json();
-        }).catch(err => {
-            console.error('Failed to fetch weather year', pastYear, err);
-            // Critical: Propagate Rate Limit errors so UI can show specific warning
-            if (err.message && err.message.includes('Rate Limit')) {
-                throw err;
-            }
-            return null;
-        });
-
-        if (res && res.daily) {
-            const daily = res.daily;
-
-            // Map the API response to our daily buckets
-            // We need to align the API data (which starts at Jan 1 - leadDays) 
-            // with the actual calendar days of that year.
-
-            // Start iterating from the first ACTUAL day of the year (index = leadDays)
-            // The API response has [leadDays] worth of data before Jan 1.
-
-            const daysInPastYear = (new Date(pastYear, 11, 31).getTime() - new Date(pastYear, 0, 1).getTime()) / 86400000 + 1;
-
-            for (let d = 0; d < daysInPastYear; d++) {
-                // Actual Date we are processing
-                const date = new Date(pastYear, 0, 1 + d); // Jan 1 + d days
-                const key = getDayKey(date);
-
-                // If key exists in our buckets (it should, unless pastYear is leap and buckets aren't?)
-                // We initialized buckets with a leap year, so all valid MM-DD exist.
-                if (!dailyStats[key]) continue;
-
-                // Index in API response array
-                const centerIdx = leadDays + d;
-
-                // --- Smoothing Logic (Same as before) ---
-                const getWindowAvg = (arr: number[]) => {
-                    let sum = 0;
-                    let count = 0;
-                    let max = -Infinity;
-
-                    for (let w = -windowSize; w <= windowSize; w++) {
-                        const idx = centerIdx + w;
-                        if (idx >= 0 && idx < arr.length && arr[idx] !== null && arr[idx] !== undefined) {
-                            sum += arr[idx];
-                            count++;
-                            if (arr[idx] > max) max = arr[idx];
-                        }
-                    }
-                    return count > 0 ? sum / count : null;
-                };
-
-                const tempMax = getWindowAvg(daily.temperature_2m_max);
-                const tempMin = getWindowAvg(daily.temperature_2m_min);
-                // New logic: Apparent Temp
-                const apparentTemp = getWindowAvg(daily.apparent_temperature_max);
-                const precipH = getWindowAvg(daily.precipitation_hours);
-
-                const humidity = getWindowAvg(daily.relative_humidity_2m_mean);
-                const wind = getWindowAvg(daily.wind_speed_10m_max);
-                const rain = getWindowAvg(daily.precipitation_sum);
-
-                // --- Mud Index: Use Real API Soil Moisture ---
-                // Field: soil_moisture_0_to_7cm_mean (m³/m³)
-                const mudValue = getWindowAvg(daily.soil_moisture_0_to_7cm_mean || []);
-
-                // Push to aggregators
-                if (tempMax !== null) dailyStats[key].tempsMax.push(tempMax);
-                if (tempMin !== null) dailyStats[key].tempsMin.push(tempMin);
-                if (apparentTemp !== null) dailyStats[key].apparentTemps.push(apparentTemp);
-                if (precipH !== null) dailyStats[key].precipHours.push(precipH);
-                if (humidity !== null) dailyStats[key].humidities.push(humidity);
-                if (wind !== null) dailyStats[key].winds.push(wind);
-                if (rain !== null) dailyStats[key].rains.push(rain);
-                if (mudValue !== null) dailyStats[key].trailingRains.push(mudValue);
-
-            }
-        }
-
-        // Polite delay
-        await new Promise(r => setTimeout(r, 400));
-    }
-
-    // --- Final Aggregation ---
-    try {
-        const weatherMap: Record<string, WeatherStats> = {};
-
-        // Iterate all days of the TARGET year (currentYear)
-        // to construct the final map with YYYY-MM-DD keys
-        const targetStart = new Date(currentYear, 0, 1);
-        const targetEnd = new Date(currentYear, 11, 31);
-
-        for (let d = new Date(targetStart); d <= targetEnd; d.setDate(d.getDate() + 1)) {
-            const key = getDayKey(d);
-            const stats = dailyStats[key];
-
-            if (!stats || stats.tempsMax.length === 0) continue;
-
-            const count = stats.tempsMax.length;
-            const targetDateKey = getFullDateKey(d);
-
-            // Averages
-            const avgMaxTemp = stats.tempsMax.reduce((a, b) => a + b, 0) / count;
-            const avgMinTemp = stats.tempsMin.length > 0 ? stats.tempsMin.reduce((a, b) => a + b, 0) / stats.tempsMin.length : avgMaxTemp - 10;
-            const avgApparent = stats.apparentTemps.length > 0 ? stats.apparentTemps.reduce((a, b) => a + b, 0) / stats.apparentTemps.length : avgMaxTemp;
-            const avgPrecipH = stats.precipHours.length > 0 ? stats.precipHours.reduce((a, b) => a + b, 0) / stats.precipHours.length : 0;
-            const avgHumidity = stats.humidities.length > 0 ? stats.humidities.reduce((a, b) => a + b, 0) / stats.humidities.length : 50;
-            const avgMaxWind = stats.winds.length > 0 ? stats.winds.reduce((a, b) => a + b, 0) / stats.winds.length : 0;
-            const avgRain = stats.rains.reduce((a, b) => a + b, 0) / count;
-            const avgMud = stats.trailingRains.reduce((a, b) => a + b, 0) / count;
-
-            // Probabilities
-            const rainDays = stats.rains.filter(r => r > 1.0).length;
-            const heavyRainDays = stats.rains.filter(r => r > 5.0).length;
-
-            weatherMap[targetDateKey] = {
-                avgMaxTemp,
-                avgMinTemp,
-                avgApparentTemp: avgApparent,
-                avgPrecipHours: avgPrecipH,
-                avgHumidity,
-                maxWindSpeed: avgMaxWind,
-                avgPrecipitation: avgRain,
-                rainProbability: (rainDays / count) * 100,
-                heavyRainProbability: (heavyRainDays / count) * 100,
-                mudIndex: avgMud,
-                history: {
-                    temps: stats.tempsMax,
-                    tempsMin: stats.tempsMin,
-                    rain: stats.rains,
-                    humidities: stats.humidities,
-                    winds: stats.winds,
-                    apparentTemps: stats.apparentTemps,
-                    precipHours: stats.precipHours
-                }
-            };
-        }
-
-        // 2. Save to Cache
-        try {
-            localStorage.setItem(cacheKey, JSON.stringify(weatherMap));
-        } catch (e) {
-            console.warn('Failed to save weather to localStorage (Quota?)', e);
-        }
-
-        return weatherMap;
-
-    } catch (e) {
-        console.error("Bulk weather fetch failed", e);
-        // Rethrow so useAnalysis can handle it
+        console.error('Backend API Failed', e);
         throw e;
     }
 }

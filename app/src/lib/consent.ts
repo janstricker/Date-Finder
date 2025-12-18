@@ -2,8 +2,7 @@
 export const CONSENT_KEY = 'privacy_consent';
 
 export function isConsentGiven(): boolean {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(CONSENT_KEY) === 'true';
+    return true;
 }
 
 export function setConsentGiven(given: boolean) {

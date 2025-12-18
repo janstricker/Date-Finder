@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useConsent } from '../context/ConsentContext';
-import { Sparkles, Sliders, Activity, Calendar, ChevronRight, Check, MapPin, Shield } from 'lucide-react';
+import { Sparkles, Sliders, Activity, Calendar, ChevronRight, Check, MapPin } from 'lucide-react';
 import type { TranslationKey } from '../lib/i18n';
 
 interface OnboardingModalProps {
     onClose: () => void;
+    // showConsent prop is deprecated/unused
     showConsent?: boolean;
 }
 
-export function OnboardingModal({ onClose, showConsent = true }: OnboardingModalProps) {
+export function OnboardingModal({ onClose }: OnboardingModalProps) {
     const { t } = useLanguage();
-    const { giveConsent } = useConsent();
     const [step, setStep] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -64,20 +63,12 @@ export function OnboardingModal({ onClose, showConsent = true }: OnboardingModal
             color: 'text-emerald-500',
             bg: 'bg-emerald-100',
             dotColor: 'bg-emerald-500'
-        },
-        {
-            id: 'consent',
-            icon: Shield,
-            titleKey: 'consent.message' as TranslationKey,
-            descKey: 'consent.details' as TranslationKey,
-            color: 'text-slate-600',
-            bg: 'bg-slate-100',
-            dotColor: 'bg-slate-500'
         }
     ];
 
-    // Filter steps to exclude consent if not requested
-    const steps = showConsent ? allSteps : allSteps.filter(s => s.id !== 'consent');
+    // Filter steps to exclude consent if not requested 
+    // (Legacy prop support, but consent step is gone so just allSteps)
+    const steps = allSteps;
 
     const currentStep = steps[step];
     const Icon = currentStep.icon;
@@ -87,25 +78,12 @@ export function OnboardingModal({ onClose, showConsent = true }: OnboardingModal
             setStep(step + 1);
         } else {
             // FINISH
-            // Only give consent if we are actually on the consent step
-            if (currentStep.id === 'consent') {
-                giveConsent();
-            }
             handleClose();
         }
     };
 
     const handleSkip = () => {
-        // Find index of consent step
-        const consentIndex = steps.findIndex(s => s.id === 'consent');
-
-        if (consentIndex !== -1 && step < consentIndex) {
-            // Jump to consent if available and not there yet
-            setStep(consentIndex);
-        } else {
-            // Otherwise close (e.g. no consent step or already there)
-            handleClose();
-        }
+        handleClose();
     };
 
     const handleClose = () => {
@@ -113,7 +91,7 @@ export function OnboardingModal({ onClose, showConsent = true }: OnboardingModal
         setTimeout(onClose, 300); // Wait for animation
     };
 
-    const isConsentStep = currentStep.id === 'consent';
+    const isConsentStep = false;
     const isLastStep = step === steps.length - 1;
 
     return (

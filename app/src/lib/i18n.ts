@@ -200,6 +200,7 @@ export type TranslationKey =
     | 'loading.analyzing_year'
     | 'error.analysis_failed'
     | 'error.rateLimit'
+    | 'error.noData'
 
     // Top 10 List
     | 'top10.title'
@@ -452,6 +453,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'loading.analyzing_year': 'Analyzing full year...',
         'error.analysis_failed': 'Failed to load weather data. Please check your connection or try again later.',
         'error.rateLimit': 'Rate limit exceeded (Too many requests). Please wait a minute before trying again.',
+        'error.noData': 'No weather data found for this location. Currently, only the Fichtelgebirge region is supported.',
 
         'top10.title': 'Best Days',
         'top10.rank': 'Rank',
@@ -691,6 +693,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'loading.analyzing_year': 'Analysiere das komplette Jahr...',
         'error.analysis_failed': 'Fehler beim Laden der Wetterdaten. Bitte prüfen Sie Ihre Verbindung oder versuchen Sie es später noch einmal.',
         'error.rateLimit': 'Zu viele Anfragen (Rate Limit). Bitte probiere es in einigen Stunden noch einmal.',
+        'error.noData': 'Keine Wetterdaten für diesen Ort gefunden. Aktuell wird nur die Region Fichtelgebirge unterstützt.',
 
         'top10.title': 'Beste Tage',
         'top10.rank': 'Rang',

@@ -4,7 +4,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GPXPoint } from '../lib/gpx';
 import { useLanguage } from '../context/LanguageContext';
-import { useConsent } from '../context/ConsentContext';
 
 // Fix Leaflet Default Icon issue in Webpack/Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -33,7 +32,6 @@ function MapUpdater({ track }: { track: GPXPoint[] }) {
 
 export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPointsChange }) => {
     const { t } = useLanguage();
-    const { hasConsent } = useConsent();
 
     // Convert track to Leaflet LatLngExpression[]
     const polylinePositions = useMemo(() =>
@@ -64,17 +62,6 @@ export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPoin
     };
 
     if (track.length === 0) return null;
-
-    if (!hasConsent) {
-        return (
-            <div className="h-64 w-full rounded-lg border border-gray-200 shadow-sm bg-gray-50 flex items-center justify-center flex-col gap-2">
-                <span className="text-gray-400 text-sm">{t('gpx.map.disabled')}</span>
-                <span className="text-xs text-gray-400 max-w-xs text-center">
-                    {t('gpx.map.consent')}
-                </span>
-            </div>
-        );
-    }
 
     return (
         <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm z-0">

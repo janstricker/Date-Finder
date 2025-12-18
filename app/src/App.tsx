@@ -10,7 +10,6 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { OnboardingModal } from './components/OnboardingModal';
-import { ConsentProvider, useConsent } from './context/ConsentContext';
 
 
 // Initial State: September 2026, Fichtelgebirge
@@ -22,7 +21,6 @@ defaultDate.setDate(1); // Start of month
 
 function FichtelPlanner() {
   const { t } = useLanguage();
-  const { giveConsent } = useConsent();
 
   const [constraints, setConstraints] = useState<EventConstraints>({
     // Default to September 2026
@@ -49,7 +47,7 @@ function FichtelPlanner() {
   const [dataLastUpdated, setDataLastUpdated] = useState<string | undefined>();
 
   useEffect(() => {
-    fetch('/data/events.json')
+    fetch('./data/events.json')
       .then(res => res.json())
       .then(data => {
         if (data && data.events) {
@@ -65,14 +63,12 @@ function FichtelPlanner() {
   const [selectedDayScore, setSelectedDayScore] = useState<any | null>(null);
   const [isYearView, setIsYearView] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showConsentStep, setShowConsentStep] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('fichtel_onboarding_seen');
     if (!hasSeenOnboarding) {
       // Small delay to ensure app is loaded visually
       setTimeout(() => {
-        setShowConsentStep(true);
         setShowOnboarding(true);
       }, 1000);
     }
@@ -84,7 +80,6 @@ function FichtelPlanner() {
   };
 
   const handleShowOnboardingManual = () => {
-    setShowConsentStep(false);
     setShowOnboarding(true);
   };
 
@@ -140,7 +135,7 @@ function FichtelPlanner() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
       <Header />
-      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} showConsent={showConsentStep} />}
+      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} />}
       <div className="flex-grow p-6 md:p-12">
         <div className="max-w-6xl mx-auto space-y-6">
 
@@ -173,21 +168,12 @@ function FichtelPlanner() {
                     <span className="text-sm font-semibold text-red-800">
                       {t(error as any)}
                     </span>
-                    {error === 'error.consent_required' ? (
-                      <button
-                        onClick={giveConsent}
-                        className="text-xs px-3 py-1.5 bg-blue-600 border border-blue-600 rounded-md text-white hover:bg-blue-700 transition-colors font-medium shadow-sm"
-                      >
-                        {t('consent.accept')}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
-                      >
-                        Reload App
-                      </button>
-                    )}
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
+                    >
+                      Reload App
+                    </button>
                   </div>
                 </div>
               )}
@@ -245,9 +231,7 @@ function FichtelPlanner() {
 function App() {
   return (
     <LanguageProvider>
-      <ConsentProvider>
-        <FichtelPlanner />
-      </ConsentProvider>
+      <FichtelPlanner />
     </LanguageProvider>
   );
 }
