@@ -185,6 +185,10 @@ export type TranslationKey =
 
     | 'breakdown.hypothermia'
     | 'breakdown.washout'
+    | 'gpx.map.disabled'
+    | 'gpx.map.consent'
+    | 'gpx.map.samplingPoint'
+    | 'gpx.map.ele'
 
     // Misc
     | 'detail.close'
@@ -363,6 +367,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.gpx.tip': '💡 Tip: Drag the markers to the most exposed parts of your route (peaks, ridges) for accurate weather.',
         'config.gpx.analysisActive': 'Analysis Active',
         'config.gpx.runAnalysis': 'Run Analysis',
+
+        'gpx.map.disabled': 'Map disabled (GDPR)',
+        'gpx.map.consent': 'Accept privacy terms to load OpenStreetMap tiles.',
+        'gpx.map.samplingPoint': 'Sampling Point #',
+        'gpx.map.ele': 'Ele',
 
         'detail.close': 'Close details',
         'detail.mud.dry': 'Dry',
@@ -662,6 +671,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'config.gpx.tip': '💡 Tipp: Ziehe die Marker auf exponierte Stellen (Gipfel, Kämme) für genauere Wetterdaten.',
         'config.gpx.analysisActive': 'Analyse aktiv',
         'config.gpx.runAnalysis': 'Analyse starten',
+
+        'gpx.map.disabled': 'Karte deaktiviert (DSGVO)',
+        'gpx.map.consent': 'Stimme den Datenschutzbestimmungen zu, um OpenStreetMap zu laden.',
+        'gpx.map.samplingPoint': 'Messpunkt Nr. ',
+        'gpx.map.ele': 'Höhe',
 
         'detail.close': 'Details schließen',
         'detail.mud.dry': 'Trocken',

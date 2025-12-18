@@ -68,9 +68,9 @@ export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPoin
     if (!hasConsent) {
         return (
             <div className="h-64 w-full rounded-lg border border-gray-200 shadow-sm bg-gray-50 flex items-center justify-center flex-col gap-2">
-                <span className="text-gray-400 text-sm">Map disabled (GDPR)</span>
+                <span className="text-gray-400 text-sm">{t('gpx.map.disabled')}</span>
                 <span className="text-xs text-gray-400 max-w-xs text-center">
-                    Accept privacy terms to load OpenStreetMap tiles.
+                    {t('gpx.map.consent')}
                 </span>
             </div>
         );
@@ -101,8 +101,8 @@ export const RouteMap: React.FC<RouteMapProps> = ({ track, sampledPoints, onPoin
                         }}
                     >
                         <Popup>
-                            Sampling Point #{idx + 1} <br />
-                            Ele: {pt.ele.toFixed(0)}m
+                            {t('gpx.map.samplingPoint')}{idx + 1} <br />
+                            {t('gpx.map.ele')}: {pt.ele.toFixed(0)}m
                         </Popup>
                     </Marker>
                 ))}
