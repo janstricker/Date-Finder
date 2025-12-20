@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Allow manual trigger for testing
+  workflow_dispatch:
 
 jobs:
   web-deploy:
