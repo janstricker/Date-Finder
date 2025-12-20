@@ -144,6 +144,8 @@ export function useAnalysis(constraints: EventConstraints, conflictingEvents: an
                     } else if (e.message === 'error.consent_required') {
                         // Fallback for types but should not happen
                         setError('error.consent_required');
+                    } else if (e.message && (e.message.includes('READ_ONLY') || e.message.includes('NOT_WRITABLE'))) {
+                        setError(e.message);
                     } else if (e.message === 'NO_DATA_FOUND') {
                         setError('error.noData');
                     } else {

@@ -43,4 +43,4 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
-          lftp -c "set ssl:verify-certificate no; open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }}; mirror --reverse --verbose --delete --exclude api/weather.db --exclude .git/ --exclude .DS_Store ./deploy/ /; quit"
+          lftp -c "set ssl:verify-certificate no; set mirror:set-permissions no; open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }}; mirror --reverse --verbose --delete --exclude api/weather.db --exclude .git/ --exclude .DS_Store ./deploy/ /; chmod 775 api/; chmod 664 api/weather.db; quit"

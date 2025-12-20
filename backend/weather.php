@@ -23,16 +23,6 @@ try {
         throw new Exception("Database not found. Please upload weather.db");
     }
 
-    // Check write permissions for Hybrid Mode
-    if (!is_writable($dbPath)) {
-        // If file exists but not writable
-        throw new Exception("DB_READ_ONLY: weather.db not writable by user " . get_current_user());
-    }
-    if (!is_writable(dirname($dbPath))) {
-        // If folder not writable (needed for WAL journal)
-        throw new Exception("DIR_READ_ONLY: Directory not writable (WAL mode requires this).");
-    }
-
     $db = new SQLite3($dbPath);
 
     // 1. Find Nearest Neighbor (Euclidean Distance squared)
@@ -63,6 +53,14 @@ try {
     if (!$location) {
         // --- HYBRID MODE: LAZY FETCH ---
         // If not in DB, fetch from Open-Meteo, Cache it, and Use it.
+
+        // Safety Check: Can we write?
+        if (!is_writable($dbPath)) {
+            throw new Exception("DB_READ_ONLY: Cannot cache new location. Please set weather.db to writable (chmod 775/777).");
+        }
+        if (!is_writable(dirname($dbPath))) {
+            throw new Exception("DIR_READ_ONLY: Cannot cache. Folder must be writable for SQLite WAL mode.");
+        }
 
         // 1. Fetch from API
         $yearsBack = 10;
