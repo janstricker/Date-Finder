@@ -494,7 +494,7 @@ export function ConfigForm({ constraints, onUpdate, dataLastUpdated }: ConfigFor
                                 {dataLastUpdated && (
                                     <div className="flex gap-2">
                                         <span>{t('config.dataUpdated')} {new Date(dataLastUpdated).toLocaleDateString()}</span>
-                                        <span>{t('config.nextUpdate')} {new Date(new Date(dataLastUpdated).getTime() + 7 * 86400000).toLocaleDateString()}</span>
+                                        <span>{t('config.nextUpdate')} {new Date(new Date(dataLastUpdated).getFullYear(), new Date(dataLastUpdated).getMonth() + 1, 1).toLocaleDateString()}</span>
                                     </div>
                                 )}
                             </div>

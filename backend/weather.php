@@ -51,12 +51,80 @@ try {
     $location = $locResult->fetchArray(SQLITE3_ASSOC);
 
     if (!$location) {
-        throw new Exception("NO_DATA_FOUND");
+        // --- HYBRID MODE: LAZY FETCH ---
+        // If not in DB, fetch from Open-Meteo, Cache it, and Use it.
+
+        // 1. Fetch from API
+        $yearsBack = 10;
+        $endStr = date('Y-m-d', strtotime('-5 days'));
+        $startStr = date('Y-m-d', strtotime("-$yearsBack years"));
+
+        $params = implode(',', [
+            'temperature_2m_max',
+            'temperature_2m_min',
+            'apparent_temperature_max',
+            'precipitation_sum',
+            'precipitation_hours',
+            'relative_humidity_2m_mean',
+            'wind_speed_10m_max',
+            'soil_moisture_0_to_7cm_mean'
+        ]);
+
+        $url = "https://archive-api.open-meteo.com/v1/archive?latitude=$lat&longitude=$lng&start_date=$startStr&end_date=$endStr&daily=$params&timezone=auto";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $json = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$json) {
+            throw new Exception("Live Fetch Failed: HTTP $httpCode");
+        }
+
+        $data = json_decode($json, true);
+        if (!isset($data['daily'])) {
+            throw new Exception("Live Fetch: No Data");
+        }
+
+        // 2. Cache to DB
+        $db->exec('BEGIN');
+
+        $stmt = $db->prepare("INSERT INTO locations (lat, lng) VALUES (:lat, :lng)");
+        $stmt->bindValue(':lat', $lat);
+        $stmt->bindValue(':lng', $lng);
+        $stmt->execute();
+        $locId = $db->lastInsertRowID();
+
+        $d = $data['daily'];
+        $count = count($d['time']);
+        $stmt = $db->prepare("
+            INSERT INTO daily (loc_id, date, t_max, t_min, t_app_max, precip, precip_h, wind, humid, soil)
+            VALUES (:id, :date, :tmax, :tmin, :tapp, :precip, :ph, :wind, :hum, :soil)
+        ");
+
+        for ($i = 0; $i < $count; $i++) {
+            $stmt->bindValue(':id', $locId);
+            $stmt->bindValue(':date', $d['time'][$i]);
+            $stmt->bindValue(':tmax', $d['temperature_2m_max'][$i]);
+            $stmt->bindValue(':tmin', $d['temperature_2m_min'][$i]);
+            $stmt->bindValue(':tapp', $d['apparent_temperature_max'][$i]);
+            $stmt->bindValue(':precip', $d['precipitation_sum'][$i]);
+            $stmt->bindValue(':ph', $d['precipitation_hours'][$i]);
+            $stmt->bindValue(':wind', $d['wind_speed_10m_max'][$i]);
+            $stmt->bindValue(':hum', $d['relative_humidity_2m_mean'][$i]);
+            $stmt->bindValue(':soil', $d['soil_moisture_0_to_7cm_mean'][$i]);
+            $stmt->execute();
+        }
+        $db->exec('COMMIT');
+
+        // 3. Continue with this new Location ID
+    } else {
+        $locId = $location['id'];
     }
 
-    $locId = $location['id'];
-
-    // 2. Fetch History
+    // 2. Fetch History (Standard Path)
     $histStmt = $db->prepare('SELECT * FROM daily WHERE loc_id = :loc_id ORDER BY date ASC');
     $histStmt->bindValue(':loc_id', $locId, SQLITE3_INTEGER);
     $histResult = $histStmt->execute();

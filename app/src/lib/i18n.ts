@@ -187,6 +187,7 @@ export type TranslationKey =
     | 'breakdown.washout'
     | 'gpx.map.disabled'
     | 'gpx.map.consent'
+    | 'gpx.map.load'
     | 'gpx.map.samplingPoint'
     | 'gpx.map.ele'
 
@@ -371,6 +372,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'gpx.map.disabled': 'Map disabled (GDPR)',
         'gpx.map.consent': 'Accept privacy terms to load OpenStreetMap tiles.',
+        'gpx.map.load': 'Enable Map',
         'gpx.map.samplingPoint': 'Sampling Point #',
         'gpx.map.ele': 'Ele',
 
@@ -676,6 +678,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'gpx.map.disabled': 'Karte deaktiviert (DSGVO)',
         'gpx.map.consent': 'Stimme den Datenschutzbestimmungen zu, um OpenStreetMap zu laden.',
+        'gpx.map.load': 'Karte aktivieren',
         'gpx.map.samplingPoint': 'Messpunkt Nr. ',
         'gpx.map.ele': 'Höhe',
 
