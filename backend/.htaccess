@@ -1,0 +1,14 @@
+# Prevent directory listing
+Options -Indexes
+
+# Deny access to sensitive files
+<FilesMatch "\.(db|sqlite|sqlite3|log|ini|sh)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow access to API endpoints
+<FilesMatch "\.(php|html|js|css)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>

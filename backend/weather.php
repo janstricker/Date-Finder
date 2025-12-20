@@ -23,6 +23,16 @@ try {
         throw new Exception("Database not found. Please upload weather.db");
     }
 
+    // Check write permissions for Hybrid Mode
+    if (!is_writable($dbPath)) {
+        // If file exists but not writable
+        throw new Exception("DB_READ_ONLY: weather.db not writable by user " . get_current_user());
+    }
+    if (!is_writable(dirname($dbPath))) {
+        // If folder not writable (needed for WAL journal)
+        throw new Exception("DIR_READ_ONLY: Directory not writable (WAL mode requires this).");
+    }
+
     $db = new SQLite3($dbPath);
 
     // 1. Find Nearest Neighbor (Euclidean Distance squared)

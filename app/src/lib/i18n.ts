@@ -249,7 +249,8 @@ export type TranslationKey =
     | 'consent.message'
     | 'consent.details'
     | 'consent.accept'
-    | 'error.consent_required';
+    | 'error.consent_required'
+    | 'error.reload';
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
     en: {
@@ -496,7 +497,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'consent.message': 'Privacy & Data Consent',
         'consent.details': 'This application retrieves weather data from Open-Meteo and holiday dates from OpenHolidays. To function, your IP address may be processed by these services. By continuing, you agree to this usage.',
         'consent.accept': 'Agree & Continue',
-        'error.consent_required': 'Consent required to load data. Please accept the privacy terms.'
+        'error.consent_required': 'Consent required to load data. Please accept the privacy terms.',
+        'error.reload': 'Reload App'
     },
     de: {
         'app.title': 'Laufevent Datumsfinder',
@@ -737,6 +739,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'consent.message': 'Datenschutz Zustimmung',
         'consent.details': 'Diese Anwendung ruft Wetterdaten von Open-Meteo und Feiertage von OpenHolidays ab. Um zu funktionieren, wird Ihre IP-Adresse ggf. von diesen Diensten verarbeitet. Durch Fortfahren stimmen Sie dieser Nutzung zu.',
         'consent.accept': 'Zustimmen & Weiter',
-        'error.consent_required': 'Zustimmung erforderlich. Bitte akzeptieren Sie die Datenschutzhinweise.'
+        'error.consent_required': 'Zustimmung erforderlich. Bitte akzeptieren Sie die Datenschutzhinweise.',
+        'error.reload': 'App neu laden'
     }
 };

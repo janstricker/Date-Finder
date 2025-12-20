@@ -172,7 +172,7 @@ function FichtelPlanner() {
                       onClick={() => window.location.reload()}
                       className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-md text-red-700 hover:bg-red-50 transition-colors font-medium shadow-sm"
                     >
-                      Reload App
+                      {t('error.reload')}
                     </button>
                   </div>
                 </div>
