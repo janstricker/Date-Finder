@@ -14,7 +14,14 @@ export function Footer({ onShowOnboarding }: FooterProps) {
 
                 {/* Copyright / Info */}
                 <div className="text-sm text-gray-500 flex flex-col md:flex-row items-center gap-1 md:gap-4">
-                    <span>&copy; {new Date().getFullYear()} FichtelUltra. {t('footer.rights')}</span>
+                    <div className="flex items-center gap-1 md:gap-4">
+                        <a href="https://fichtelultra.de" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 transition-colors" aria-label="FichtelUltra Website">
+                            <svg width="24" height="24" viewBox="0 0 176 208" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="h-6 w-auto">
+                                <path clipRule="evenodd" d="m17.5633.0L158.436 1219e-8V23.2816H17.5633zm0 46.5642H158.436v23.2816H17.5633zM0 187.786l64.3385-36.456-64.33849485-36.456L11.6487 94.6596 88 137.923l76.351-43.2634L176 114.874l-64.339 36.456L176 187.786 164.351 208 88 164.737 11.6487 208z" fillRule="evenodd"></path>
+                            </svg>
+                        </a>
+                        <span className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} <a href="https://fichtelultra.de" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">{t('header.app')}</a>. {t('footer.rights')}</span>
+                    </div>
                     <a
                         href="https://github.com/janstricker/Date-Finder"
                         target="_blank"

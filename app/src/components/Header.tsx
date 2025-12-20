@@ -25,9 +25,9 @@ export function Header() {
                                 Beta
                             </a>
                         </div>
-                        <span className="text-xs font-medium text-slate-500 tracking-wide">
+                        <a href="https://fichtelultra.de" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-slate-500 tracking-wide hover:text-slate-700 transition-colors">
                             {t('header.app')}
-                        </span>
+                        </a>
                     </div>
                 </div>
 

@@ -258,7 +258,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
 
         'app.subtitle': 'Find the perfect date for your trail running event.',
         'header.brand': 'Date-Finder',
-        'header.app': 'FichtelUltra',
+        'header.app': 'by FichtelUltra',
         'loading.analyzing': 'Analyzing...',
 
         'config.location': 'Location',
@@ -505,7 +505,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         'app.subtitle': 'Finde das perfekte Datum für deinen Lauf.',
 
         'header.brand': 'Laufevent Datumsfinder',
-        'header.app': 'FichtelUltra',
+        'header.app': 'von FichtelUltra',
         'loading.analyzing': 'Analysiere...',
 
         'config.location': 'Ort',
