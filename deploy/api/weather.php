@@ -54,11 +54,14 @@ try {
         $newLocId = fetchAndStoreLocation($lat, $lng, $db);
         if ($newLocId) {
             $locId = $newLocId;
+            header('X-Weather-Source: API-Fetch');
         } else {
             throw new Exception("NO_DATA_FOUND_AND_FETCH_FAILED");
         }
     } else {
         $locId = $location['id'];
+        header('X-Weather-Source: Database-Cache');
+        header('X-Cache-Distance: ' . number_format($location['dist_sq'], 6));
     }
 
     // 2. Fetch History
