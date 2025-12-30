@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db';
-import { WeatherStats } from '../types'; // Definition below (inline for now)
+import { fetchAndStoreLocation } from '../services/fetcher';
 
 // Replicating the Interface from frontend
 interface WeatherStatsResponse {
@@ -47,15 +47,20 @@ export async function weatherRoutes(fastify: FastifyInstance) {
             [lngNum, latNum]
         );
 
-        if (locRes.rows.length === 0) {
-            return reply.status(404).send({ error: "No weather data found for this region." });
+        let locationId: number;
+
+        if (locRes.rows.length === 0 || locRes.rows[0].dist > 0.1) {
+            // Dynamic Fetch if not found or > ~10km away
+            console.log(`Region not found (dist: ${locRes.rows[0]?.dist}), fetching for ${lat}, ${lng}`);
+            const newId = await fetchAndStoreLocation(latNum, lngNum);
+
+            if (!newId) {
+                return reply.status(404).send({ error: "No weather data found for this region and failed to fetch." });
+            }
+            locationId = newId;
+        } else {
+            locationId = locRes.rows[0].id;
         }
-
-        const locationId = locRes.rows[0].id;
-        const distanceDeg = locRes.rows[0].dist;
-
-        // Rough check: If nearest point is > 50km away (approx 0.5 deg), maybe warn?
-        // But for now we just return it.
 
         // 2. Fetch History
         const weatherRes = await db.query(

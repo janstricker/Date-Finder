@@ -51,10 +51,15 @@ try {
     $location = $locResult->fetchArray(SQLITE3_ASSOC);
 
     if (!$location) {
-        throw new Exception("NO_DATA_FOUND");
+        $newLocId = fetchAndStoreLocation($lat, $lng, $db);
+        if ($newLocId) {
+            $locId = $newLocId;
+        } else {
+            throw new Exception("NO_DATA_FOUND_AND_FETCH_FAILED");
+        }
+    } else {
+        $locId = $location['id'];
     }
-
-    $locId = $location['id'];
 
     // 2. Fetch History
     $histStmt = $db->prepare('SELECT * FROM daily WHERE loc_id = :loc_id ORDER BY date ASC');
@@ -215,4 +220,83 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
+}
+
+/**
+ * Fetches data from Open-Meteo and stores it in SQLite.
+ */
+function fetchAndStoreLocation($lat, $lng, $db)
+{
+    $yearsBack = 10;
+    $end = new DateTime();
+    $end->modify('-5 days');
+    $start = new DateTime();
+    $start->modify("-{$yearsBack} years");
+
+    $startStr = $start->format('Y-m-d');
+    $endStr = $end->format('Y-m-d');
+
+    $params = implode(',', [
+        'temperature_2m_max',
+        'temperature_2m_min',
+        'apparent_temperature_max',
+        'precipitation_sum',
+        'precipitation_hours',
+        'relative_humidity_2m_mean',
+        'wind_speed_10m_max',
+        'soil_moisture_0_to_7cm_mean'
+    ]);
+
+    $url = "https://archive-api.open-meteo.com/v1/archive?latitude={$lat}&longitude={$lng}&start_date={$startStr}&end_date={$endStr}&daily={$params}&timezone=auto";
+
+    // Use file_get_contents or curl
+    $json = @file_get_contents($url);
+    if ($json === false) {
+        return null;
+    }
+
+    $data = json_decode($json, true);
+    if (!$data || !isset($data['daily'])) {
+        return null;
+    }
+
+    // Insert Location
+    $stmt = $db->prepare('INSERT INTO locations (lat, lng) VALUES (:lat, :lng)');
+    $stmt->bindValue(':lat', $lat, SQLITE3_FLOAT);
+    $stmt->bindValue(':lng', $lng, SQLITE3_FLOAT);
+    $stmt->execute();
+
+    $locId = $db->lastInsertRowID();
+
+    // Prepare Bulk Insert
+    // SQLite doesn't support massive single INSERT with thousands of values in all versions easily via binding, 
+    // but binding in a loop within transaction is fast enough.
+
+    $db->exec('BEGIN TRANSACTION');
+    $stmtDaily = $db->prepare('
+        INSERT OR IGNORE INTO daily 
+        (loc_id, date, t_max, t_min, t_app_max, precip, precip_h, wind, humid, soil)
+        VALUES (:loc_id, :date, :t_max, :t_min, :t_app_max, :precip, :precip_h, :wind, :humid, :soil)
+    ');
+
+    $daily = $data['daily'];
+    $count = count($daily['time']);
+
+    for ($i = 0; $i < $count; $i++) {
+        $stmtDaily->bindValue(':loc_id', $locId, SQLITE3_INTEGER);
+        $stmtDaily->bindValue(':date', $daily['time'][$i], SQLITE3_TEXT);
+        $stmtDaily->bindValue(':t_max', $daily['temperature_2m_max'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':t_min', $daily['temperature_2m_min'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':t_app_max', $daily['apparent_temperature_max'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':precip', $daily['precipitation_sum'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':precip_h', $daily['precipitation_hours'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':wind', $daily['wind_speed_10m_max'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':humid', $daily['relative_humidity_2m_mean'][$i], SQLITE3_FLOAT);
+        $stmtDaily->bindValue(':soil', $daily['soil_moisture_0_to_7cm_mean'][$i], SQLITE3_FLOAT);
+        $stmtDaily->execute();
+    }
+
+    $db->exec('COMMIT');
+
+    return $locId;
 }
