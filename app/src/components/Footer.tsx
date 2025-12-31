@@ -29,7 +29,7 @@ export function Footer({ onShowOnboarding }: FooterProps) {
                         className="inline-flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700 transition-all group"
                     >
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500/70 group-hover:bg-blue-500 transition-colors"></span>
-                        v0.1-beta
+                        v0.2-beta
                     </a>
                     <span className="hidden md:inline text-gray-300">|</span>
                     <span>{t('footer.builtWith')} <span className="text-green-500">♥</span> & <span className="text-gray-700"><a href="https://antigravity.google/" target="_blank" rel="noopener noreferrer">Antigravity</a></span></span>
