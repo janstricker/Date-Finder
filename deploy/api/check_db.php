@@ -16,6 +16,11 @@ if (!file_exists($dbPath)) {
     exit;
 }
 
+// Check weather.php integrity
+$weatherPath = __DIR__ . '/weather.php';
+echo "weather.php MD5: " . md5_file($weatherPath) . "\n";
+echo "weather.php contains 'X-Weather-Source': " . (strpos(file_get_contents($weatherPath), 'X-Weather-Source') !== false ? "YES" : "NO") . "\n\n";
+
 try {
     $db = new SQLite3($dbPath);
 
