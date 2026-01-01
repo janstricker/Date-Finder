@@ -7240,5 +7240,83 @@
     "lng": 7.0395,
     "name": "Alflen",
     "admin1": "Rheinland-Pfalz"
+  },
+  "saterland": {
+    "lat": 53.03208,
+    "lng": 7.74382,
+    "name": "Saterland",
+    "admin1": "Niedersachsen"
+  },
+  "aichach": {
+    "lat": 48.45755,
+    "lng": 11.13413,
+    "name": "Aichach",
+    "admin1": "Bayern"
+  },
+  "waldkraiburg": {
+    "lat": 48.20854,
+    "lng": 12.39893,
+    "name": "Waldkraiburg",
+    "admin1": "Bayern"
+  },
+  "ralingen": {
+    "lat": 49.81667,
+    "lng": 6.5,
+    "name": "Ralingen",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "bekond": {
+    "lat": 49.85,
+    "lng": 6.8,
+    "name": "Bekond",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "eysölden": {
+    "lat": 49.13079,
+    "lng": 11.21198,
+    "name": "Eysölden",
+    "admin1": "Bayern"
+  },
+  "leer": {
+    "lat": 53.23157,
+    "lng": 7.461,
+    "name": "Leer",
+    "admin1": "Niedersachsen"
+  },
+  "sonnefeld": {
+    "lat": 50.21667,
+    "lng": 11.13333,
+    "name": "Sonnefeld",
+    "admin1": "Bayern"
+  },
+  "garching": {
+    "lat": 48.24896,
+    "lng": 11.65101,
+    "name": "Garching bei München",
+    "admin1": "Bayern"
+  },
+  "freyburg (unstrut)": {
+    "lat": 51.21362,
+    "lng": 11.76804,
+    "name": "Freyburg (Unstrut)",
+    "admin1": "Sachsen-Anhalt"
+  },
+  "ruppertsweiler": {
+    "lat": 49.19707,
+    "lng": 7.68957,
+    "name": "Ruppertsweiler",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "lüchtringen": {
+    "lat": 51.79136,
+    "lng": 9.42878,
+    "name": "Lüchtringen",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "rülzheim": {
+    "lat": 49.15312,
+    "lng": 8.29287,
+    "name": "Rülzheim",
+    "admin1": "Rheinland-Pfalz"
   }
 }
