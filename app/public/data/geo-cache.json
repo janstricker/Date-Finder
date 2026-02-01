@@ -7318,5 +7318,497 @@
     "lng": 8.29287,
     "name": "Rülzheim",
     "admin1": "Rheinland-Pfalz"
+  },
+  "neckarsulm": {
+    "lat": 49.18912,
+    "lng": 9.22527,
+    "name": "Neckarsulm",
+    "admin1": "Baden-Württemberg"
+  },
+  "pappenheim": {
+    "lat": 48.93383,
+    "lng": 10.97431,
+    "name": "Pappenheim",
+    "admin1": "Bayern"
+  },
+  "nideggen": {
+    "lat": 50.69268,
+    "lng": 6.48437,
+    "name": "Nideggen",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "imsbach": {
+    "lat": 49.58333,
+    "lng": 7.88333,
+    "name": "Imsbach",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "duggendorf": {
+    "lat": 49.11667,
+    "lng": 11.91667,
+    "name": "Duggendorf",
+    "admin1": "Bayern"
+  },
+  "konstanz": {
+    "lat": 47.66033,
+    "lng": 9.17582,
+    "name": "Kostnitz",
+    "admin1": "Baden-Württemberg"
+  },
+  "marienfeld": {
+    "lat": 32.12929,
+    "lng": -101.78846,
+    "name": "Stanton",
+    "admin1": "Texas"
+  },
+  "mainhardt": {
+    "lat": 49.07611,
+    "lng": 9.55639,
+    "name": "Mainhardt",
+    "admin1": "Baden-Württemberg"
+  },
+  "fröttstädt": {
+    "lat": 50.93363,
+    "lng": 10.57334,
+    "name": "Fröttstädt",
+    "admin1": "Thüringen"
+  },
+  "bingen am rhein": {
+    "lat": 49.96675,
+    "lng": 7.8992,
+    "name": "Bingen am Rhein",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "bissendorf": {
+    "lat": 52.23333,
+    "lng": 8.16667,
+    "name": "Bissendorf",
+    "admin1": "Niedersachsen"
+  },
+  "oybin": {
+    "lat": 50.84105,
+    "lng": 14.74124,
+    "name": "Oybin",
+    "admin1": "Sachsen"
+  },
+  "wermelskirchen": {
+    "lat": 51.1397,
+    "lng": 7.21583,
+    "name": "Wermelskirchen",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "rotenburg/wümme": {
+    "lat": 53.13333,
+    "lng": 9.35,
+    "name": "Rotenburg/Wümme",
+    "admin1": "Niedersachsen"
+  },
+  "tostedt": {
+    "lat": 53.28333,
+    "lng": 9.71667,
+    "name": "Tostedt",
+    "admin1": "Niedersachsen"
+  },
+  "minderlittgen": {
+    "lat": 50.01667,
+    "lng": 6.83333,
+    "name": "Minderlittgen",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "heidesheim": {
+    "lat": 49.58247,
+    "lng": 8.19537,
+    "name": "Heidesheim",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "steinbach": {
+    "lat": 50.16774,
+    "lng": 8.57278,
+    "name": "Steinbach",
+    "admin1": "Hessen"
+  },
+  "berlin-britz": {
+    "lat": 52.44293,
+    "lng": 13.43388,
+    "name": "Berlin-Britz",
+    "admin1": "Berlin"
+  },
+  "scheeßel": {
+    "lat": 53.16667,
+    "lng": 9.48333,
+    "name": "Scheeßel",
+    "admin1": "Niedersachsen"
+  },
+  "gambach": {
+    "lat": 46.77894,
+    "lng": 7.37855,
+    "name": "Rüschegg Gambach",
+    "admin1": "Bern"
+  },
+  "gadenstedt": {
+    "lat": 52.24628,
+    "lng": 10.21634,
+    "name": "Gadenstedt",
+    "admin1": "Niedersachsen"
+  },
+  "weiden": {
+    "lat": 49.67682,
+    "lng": 12.15613,
+    "name": "Weiden",
+    "admin1": "Bayern"
+  },
+  "wingst": {
+    "lat": 53.73572,
+    "lng": 9.08054,
+    "name": "Wingst",
+    "admin1": "Niedersachsen"
+  },
+  "peine": {
+    "lat": 52.31928,
+    "lng": 10.2352,
+    "name": "Peine",
+    "admin1": "Niedersachsen"
+  },
+  "dornstadt": {
+    "lat": 48.46697,
+    "lng": 9.94434,
+    "name": "Dornstadt",
+    "admin1": "Baden-Württemberg"
+  },
+  "geisenheim": {
+    "lat": 49.9847,
+    "lng": 7.96835,
+    "name": "Geisenheim",
+    "admin1": "Hessen"
+  },
+  "chieming": {
+    "lat": 47.89258,
+    "lng": 12.54012,
+    "name": "Chieming",
+    "admin1": "Bayern"
+  },
+  "mörlenbach": {
+    "lat": 49.59917,
+    "lng": 8.73472,
+    "name": "Mörlenbach",
+    "admin1": "Hessen"
+  },
+  "ihringen": {
+    "lat": 48.04303,
+    "lng": 7.6476,
+    "name": "Ihringen",
+    "admin1": "Baden-Württemberg"
+  },
+  "wolmirstedt": {
+    "lat": 52.24856,
+    "lng": 11.62945,
+    "name": "Wolmirstedt",
+    "admin1": "Sachsen-Anhalt"
+  },
+  "neuburg": {
+    "lat": 48.50654,
+    "lng": 13.44718,
+    "name": "Neuburg am Inn",
+    "admin1": "Bayern"
+  },
+  "freising": {
+    "lat": 48.40351,
+    "lng": 11.74876,
+    "name": "Freising",
+    "admin1": "Bayern"
+  },
+  "ilmenau": {
+    "lat": 50.68322,
+    "lng": 10.91858,
+    "name": "Ilmenau",
+    "admin1": "Thüringen"
+  },
+  "wustrow": {
+    "lat": 52.9237,
+    "lng": 11.12846,
+    "name": "Wustrow",
+    "admin1": "Niedersachsen"
+  },
+  "handzell": {
+    "lat": 48.56162,
+    "lng": 11.06638,
+    "name": "Handzell",
+    "admin1": "Bayern"
+  },
+  "waldkirch": {
+    "lat": 47.46859,
+    "lng": 9.28665,
+    "name": "Waldkirch",
+    "admin1": "St. Gallen"
+  },
+  "freital": {
+    "lat": 51.00166,
+    "lng": 13.6488,
+    "name": "Freital",
+    "admin1": "Sachsen"
+  },
+  "hude": {
+    "lat": 54.38333,
+    "lng": 9.21667,
+    "name": "Hude",
+    "admin1": "Schleswig-Holstein"
+  },
+  "haßfurt": {
+    "lat": 50.03521,
+    "lng": 10.5156,
+    "name": "Haßfurt",
+    "admin1": "Bayern"
+  },
+  "freyung": {
+    "lat": 48.80952,
+    "lng": 13.54768,
+    "name": "Freyung",
+    "admin1": "Bayern"
+  },
+  "schondorf": {
+    "lat": 50.61745,
+    "lng": 11.69477,
+    "name": "Schöndorf",
+    "admin1": "Thüringen"
+  },
+  "ermsleben": {
+    "lat": 51.73244,
+    "lng": 11.3507,
+    "name": "Ermsleben",
+    "admin1": "Sachsen-Anhalt"
+  },
+  "gablenz": {
+    "lat": 51.53333,
+    "lng": 14.66667,
+    "name": "Gablenz",
+    "admin1": "Sachsen"
+  },
+  "teublitz": {
+    "lat": 49.22289,
+    "lng": 12.08727,
+    "name": "Teublitz",
+    "admin1": "Bayern"
+  },
+  "limbach-oberfrohna": {
+    "lat": 50.85882,
+    "lng": 12.76165,
+    "name": "Limbach-Oberfrohna",
+    "admin1": "Sachsen"
+  },
+  "garbsen": {
+    "lat": 52.41371,
+    "lng": 9.5899,
+    "name": "Garbsen",
+    "admin1": "Niedersachsen"
+  },
+  "großlangheim": {
+    "lat": 49.7562,
+    "lng": 10.24065,
+    "name": "Großlangheim",
+    "admin1": "Bayern"
+  },
+  "waake": {
+    "lat": 51.55637,
+    "lng": 10.05713,
+    "name": "Waake",
+    "admin1": "Niedersachsen"
+  },
+  "reichenau": {
+    "lat": 47.68885,
+    "lng": 9.06355,
+    "name": "Reichenau",
+    "admin1": "Baden-Württemberg"
+  },
+  "vechta": {
+    "lat": 52.72632,
+    "lng": 8.28598,
+    "name": "Vechta",
+    "admin1": "Niedersachsen"
+  },
+  "gronau": {
+    "lat": 52.21099,
+    "lng": 7.02238,
+    "name": "Gronau",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "bestensee": {
+    "lat": 52.23978,
+    "lng": 13.63732,
+    "name": "Bestensee",
+    "admin1": "Brandenburg"
+  },
+  "gaimersheim": {
+    "lat": 48.80705,
+    "lng": 11.36801,
+    "name": "Gaimersheim",
+    "admin1": "Bayern"
+  },
+  "nagold": {
+    "lat": 48.5498,
+    "lng": 8.72366,
+    "name": "Nagold",
+    "admin1": "Baden-Württemberg"
+  },
+  "ludwigshafen am rhein": {
+    "lat": 49.48121,
+    "lng": 8.44641,
+    "name": "Ludwigshafen am Rhein",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "löningen": {
+    "lat": 52.73678,
+    "lng": 7.75809,
+    "name": "Löningen",
+    "admin1": "Niedersachsen"
+  },
+  "thomm": {
+    "lat": 49.7414,
+    "lng": 6.80492,
+    "name": "Thomm",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "erlenbach": {
+    "lat": 47.30298,
+    "lng": 8.59743,
+    "name": "Erlenbach ZH",
+    "admin1": "Zürich"
+  },
+  "marktheidenfeld": {
+    "lat": 49.8454,
+    "lng": 9.60359,
+    "name": "Marktheidenfeld",
+    "admin1": "Bayern"
+  },
+  "oberried": {
+    "lat": 47.93333,
+    "lng": 7.95,
+    "name": "Oberried",
+    "admin1": "Baden-Württemberg"
+  },
+  "obertshausen": {
+    "lat": 50.07139,
+    "lng": 8.85123,
+    "name": "Obertshausen",
+    "admin1": "Hessen"
+  },
+  "platten": {
+    "lat": 49.95161,
+    "lng": 6.95313,
+    "name": "Platten",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "aldersbach": {
+    "lat": 48.58972,
+    "lng": 13.08971,
+    "name": "Aldersbach",
+    "admin1": "Bayern"
+  },
+  "bodenwöhr": {
+    "lat": 49.27082,
+    "lng": 12.30146,
+    "name": "Bodenwöhr",
+    "admin1": "Bayern"
+  },
+  "holle": {
+    "lat": 52.08721,
+    "lng": 10.16012,
+    "name": "Holle",
+    "admin1": "Niedersachsen"
+  },
+  "taucha": {
+    "lat": 51.38333,
+    "lng": 12.48333,
+    "name": "Taucha",
+    "admin1": "Sachsen"
+  },
+  "rötz": {
+    "lat": 48.75712,
+    "lng": 15.95485,
+    "name": "Retz",
+    "admin1": "Niederösterreich"
+  },
+  "edertal": {
+    "lat": 51.16717,
+    "lng": 9.07794,
+    "name": "Edertal",
+    "admin1": "Hessen"
+  },
+  "geithain": {
+    "lat": 51.05528,
+    "lng": 12.69674,
+    "name": "Geithain",
+    "admin1": "Sachsen"
+  },
+  "weilerswist": {
+    "lat": 50.75292,
+    "lng": 6.84585,
+    "name": "Weilerswist",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "weißwasser": {
+    "lat": 51.50403,
+    "lng": 14.64017,
+    "name": "Weißwasser",
+    "admin1": "Sachsen"
+  },
+  "kupferzell": {
+    "lat": 49.22778,
+    "lng": 9.69,
+    "name": "Kupferzell",
+    "admin1": "Baden-Württemberg"
+  },
+  "emskirchen": {
+    "lat": 49.55282,
+    "lng": 10.71278,
+    "name": "Emskirchen",
+    "admin1": "Bayern"
+  },
+  "hüllhorst": {
+    "lat": 52.275,
+    "lng": 8.669,
+    "name": "Hüllhorst",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "weißensee": {
+    "lat": 51.19989,
+    "lng": 11.06914,
+    "name": "Weißensee",
+    "admin1": "Thüringen"
+  },
+  "maxdorf": {
+    "lat": 49.48806,
+    "lng": 8.29167,
+    "name": "Maxdorf",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "walsrode": {
+    "lat": 52.86147,
+    "lng": 9.5926,
+    "name": "Walsrode",
+    "admin1": "Niedersachsen"
+  },
+  "norderstedt": {
+    "lat": 53.6859,
+    "lng": 9.98041,
+    "name": "Norderstedt",
+    "admin1": "Schleswig-Holstein"
+  },
+  "wallenborn": {
+    "lat": 50.15,
+    "lng": 6.71667,
+    "name": "Wallenborn",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "heeslingen": {
+    "lat": 53.31667,
+    "lng": 9.33333,
+    "name": "Heeslingen",
+    "admin1": "Niedersachsen"
+  },
+  "kottweiler-schwanden": {
+    "lat": 49.48333,
+    "lng": 7.53333,
+    "name": "Kottweiler-Schwanden",
+    "admin1": "Rheinland-Pfalz"
   }
 }
