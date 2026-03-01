@@ -7810,5 +7810,359 @@
     "lng": 7.53333,
     "name": "Kottweiler-Schwanden",
     "admin1": "Rheinland-Pfalz"
+  },
+  "albig": {
+    "lat": 49.77361,
+    "lng": 8.12139,
+    "name": "Albig",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "grünheide": {
+    "lat": 52.42343,
+    "lng": 13.81324,
+    "name": "Grünheide",
+    "admin1": "Brandenburg"
+  },
+  "winterlingen": {
+    "lat": 48.18333,
+    "lng": 9.11667,
+    "name": "Winterlingen",
+    "admin1": "Baden-Württemberg"
+  },
+  "hopferau": {
+    "lat": 47.61667,
+    "lng": 10.63333,
+    "name": "Hopferau",
+    "admin1": "Bayern"
+  },
+  "miesbach": {
+    "lat": 47.78903,
+    "lng": 11.83382,
+    "name": "Miesbach",
+    "admin1": "Bayern"
+  },
+  "seon": {
+    "lat": 47.34848,
+    "lng": 8.16072,
+    "name": "Seon",
+    "admin1": "Aargau"
+  },
+  "erfweiler": {
+    "lat": 49.15712,
+    "lng": 7.81231,
+    "name": "Erfweiler",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "bonn": {
+    "lat": 50.73438,
+    "lng": 7.09549,
+    "name": "Bonn",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "eilenburg": {
+    "lat": 51.45984,
+    "lng": 12.63338,
+    "name": "Eilenburg",
+    "admin1": "Sachsen"
+  },
+  "langgöns": {
+    "lat": 50.5,
+    "lng": 8.66667,
+    "name": "Langgöns",
+    "admin1": "Hessen"
+  },
+  "bad schwartau": {
+    "lat": 53.91887,
+    "lng": 10.69691,
+    "name": "Bad Schwartau",
+    "admin1": "Schleswig-Holstein"
+  },
+  "erkner": {
+    "lat": 52.42,
+    "lng": 13.75437,
+    "name": "Erkner",
+    "admin1": "Brandenburg"
+  },
+  "bad bramstedt": {
+    "lat": 53.9183,
+    "lng": 9.88424,
+    "name": "Bad Bramstedt",
+    "admin1": "Schleswig-Holstein"
+  },
+  "rosenthal": {
+    "lat": 50.97439,
+    "lng": 8.86736,
+    "name": "Rosenthal",
+    "admin1": "Hessen"
+  },
+  "stockdorf": {
+    "lat": 48.09195,
+    "lng": 11.40737,
+    "name": "Stockdorf",
+    "admin1": "Bayern"
+  },
+  "soltendieck": {
+    "lat": 52.87369,
+    "lng": 10.76162,
+    "name": "Soltendieck",
+    "admin1": "Niedersachsen"
+  },
+  "bad dürrheim": {
+    "lat": 48.02093,
+    "lng": 8.53056,
+    "name": "Bad Dürrheim",
+    "admin1": "Baden-Württemberg"
+  },
+  "deggendorf": {
+    "lat": 48.84085,
+    "lng": 12.96068,
+    "name": "Deggendorf",
+    "admin1": "Bayern"
+  },
+  "schutterwald": {
+    "lat": 48.45,
+    "lng": 7.88333,
+    "name": "Schutterwald",
+    "admin1": "Baden-Württemberg"
+  },
+  "steinach": {
+    "lat": 47.53343,
+    "lng": 14.10872,
+    "name": "Stainach",
+    "admin1": "Steiermark"
+  },
+  "hirsau": {
+    "lat": 48.73536,
+    "lng": 8.73568,
+    "name": "Hirsau",
+    "admin1": "Baden-Württemberg"
+  },
+  "bad könig": {
+    "lat": 49.7432,
+    "lng": 9.0075,
+    "name": "Bad König",
+    "admin1": "Hessen"
+  },
+  "hofgeismar": {
+    "lat": 51.49607,
+    "lng": 9.385,
+    "name": "Hofgeismar",
+    "admin1": "Hessen"
+  },
+  "geseke": {
+    "lat": 51.64091,
+    "lng": 8.5109,
+    "name": "Geseke",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "weil der stadt": {
+    "lat": 48.74953,
+    "lng": 8.87176,
+    "name": "Weil der Stadt",
+    "admin1": "Baden-Württemberg"
+  },
+  "bad kötzting": {
+    "lat": 49.17194,
+    "lng": 12.85675,
+    "name": "Bad Kötzting",
+    "admin1": "Bayern"
+  },
+  "wendelstein": {
+    "lat": 49.3523,
+    "lng": 11.15069,
+    "name": "Wendelstein",
+    "admin1": "Bayern"
+  },
+  "oranienburg": {
+    "lat": 52.75577,
+    "lng": 13.24197,
+    "name": "Oranienburg",
+    "admin1": "Brandenburg"
+  },
+  "offenburg": {
+    "lat": 48.47377,
+    "lng": 7.94495,
+    "name": "Offenburg",
+    "admin1": "Baden-Württemberg"
+  },
+  "rottendorf": {
+    "lat": 49.7923,
+    "lng": 10.02593,
+    "name": "Rottendorf",
+    "admin1": "Bayern"
+  },
+  "nottuln": {
+    "lat": 51.93333,
+    "lng": 7.35,
+    "name": "Nottuln",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "zwickau": {
+    "lat": 50.72724,
+    "lng": 12.48839,
+    "name": "Zwickau",
+    "admin1": "Sachsen"
+  },
+  "obernburg am main": {
+    "lat": 49.83577,
+    "lng": 9.13101,
+    "name": "Obernburg am Main",
+    "admin1": "Bayern"
+  },
+  "gommersheim": {
+    "lat": 49.29111,
+    "lng": 8.26583,
+    "name": "Gommersheim",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "deinste": {
+    "lat": 53.52903,
+    "lng": 9.44376,
+    "name": "Deinste",
+    "admin1": "Niedersachsen"
+  },
+  "koserow": {
+    "lat": 54.05189,
+    "lng": 14.00197,
+    "name": "Koserow/Insel Usedom",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "soltau": {
+    "lat": 52.98638,
+    "lng": 9.84338,
+    "name": "Soltau",
+    "admin1": "Niedersachsen"
+  },
+  "ainring": {
+    "lat": 47.81311,
+    "lng": 12.94048,
+    "name": "Ainring",
+    "admin1": "Bayern"
+  },
+  "lamspringe": {
+    "lat": 51.96071,
+    "lng": 10.01105,
+    "name": "Lamspringe",
+    "admin1": "Niedersachsen"
+  },
+  "durach": {
+    "lat": 47.6944,
+    "lng": 10.34449,
+    "name": "Durach",
+    "admin1": "Bayern"
+  },
+  "karlsbad": {
+    "lat": 50.23271,
+    "lng": 12.87117,
+    "name": "Karlsbad",
+    "admin1": "Karlsbader Region"
+  },
+  "ochtrup": {
+    "lat": 52.20802,
+    "lng": 7.18988,
+    "name": "Ochtrup",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "neuendettelsau": {
+    "lat": 49.28333,
+    "lng": 10.78333,
+    "name": "Neuendettelsau",
+    "admin1": "Bayern"
+  },
+  "schrozberg": {
+    "lat": 49.34528,
+    "lng": 9.97944,
+    "name": "Schrozberg",
+    "admin1": "Baden-Württemberg"
+  },
+  "klein meckelsen": {
+    "lat": 53.3,
+    "lng": 9.45,
+    "name": "Klein Meckelsen",
+    "admin1": "Niedersachsen"
+  },
+  "schwarzenberg": {
+    "lat": 47.01705,
+    "lng": 8.17261,
+    "name": "Schwarzenberg LU",
+    "admin1": "Luzern"
+  },
+  "herxheim": {
+    "lat": 49.1463,
+    "lng": 8.21346,
+    "name": "Herxheim",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "wiehl": {
+    "lat": 50.9495,
+    "lng": 7.55062,
+    "name": "Wiehl",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "halberstadt": {
+    "lat": 51.89562,
+    "lng": 11.05622,
+    "name": "Halberstadt",
+    "admin1": "Sachsen-Anhalt"
+  },
+  "elsenfeld": {
+    "lat": 49.84289,
+    "lng": 9.16355,
+    "name": "Elsenfeld",
+    "admin1": "Bayern"
+  },
+  "rastede": {
+    "lat": 53.25,
+    "lng": 8.2,
+    "name": "Rastede",
+    "admin1": "Niedersachsen"
+  },
+  "rothenburg ob der tauber": {
+    "lat": 49.37885,
+    "lng": 10.18711,
+    "name": "Rothenburg ob der Tauber",
+    "admin1": "Bayern"
+  },
+  "ostheim": {
+    "lat": 47.40994,
+    "lng": 38.02476,
+    "name": "Ostheim",
+    "admin1": "Donezk"
+  },
+  "ortenberg": {
+    "lat": 48.45158,
+    "lng": 7.97178,
+    "name": "Ortenberg",
+    "admin1": "Baden-Württemberg"
+  },
+  "schönau an der brend": {
+    "lat": 50.38104,
+    "lng": 10.1044,
+    "name": "Schönau an der Brend",
+    "admin1": "Bayern"
+  },
+  "burghaslach": {
+    "lat": 49.73313,
+    "lng": 10.6007,
+    "name": "Burghaslach",
+    "admin1": "Bayern"
+  },
+  "kaufering": {
+    "lat": 48.09121,
+    "lng": 10.87913,
+    "name": "Kaufering",
+    "admin1": "Bayern"
+  },
+  "waischenfeld": {
+    "lat": 49.84645,
+    "lng": 11.3481,
+    "name": "Waischenfeld",
+    "admin1": "Bayern"
+  },
+  "neustadt an der aisch": {
+    "lat": 49.57953,
+    "lng": 10.61126,
+    "name": "Neustadt an der Aisch",
+    "admin1": "Bayern"
   }
 }
