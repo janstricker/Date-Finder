@@ -8164,5 +8164,341 @@
     "lng": 10.61126,
     "name": "Neustadt an der Aisch",
     "admin1": "Bayern"
+  },
+  "steinfeld": {
+    "lat": 46.75812,
+    "lng": 13.24934,
+    "name": "Steinfeld",
+    "admin1": "Kärnten"
+  },
+  "marialinden": {
+    "lat": 50.93292,
+    "lng": 7.32303,
+    "name": "Marialinden",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "stolberg": {
+    "lat": 50.77368,
+    "lng": 6.22595,
+    "name": "Stolberg, Rheinland",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "chemnitz": {
+    "lat": 50.8357,
+    "lng": 12.92922,
+    "name": "Chemnitz",
+    "admin1": "Sachsen"
+  },
+  "waldeck": {
+    "lat": 50.91667,
+    "lng": 11.78333,
+    "name": "Waldeck",
+    "admin1": "Thüringen"
+  },
+  "sassnitz": {
+    "lat": 54.5157,
+    "lng": 13.64451,
+    "name": "Sassnitz",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "neuenbürg": {
+    "lat": 46.99179,
+    "lng": 6.931,
+    "name": "Neuenburg",
+    "admin1": "Neuenburg"
+  },
+  "oberstdorf": {
+    "lat": 47.40724,
+    "lng": 10.27939,
+    "name": "Oberstdorf",
+    "admin1": "Bayern"
+  },
+  "zehdenick": {
+    "lat": 52.97852,
+    "lng": 13.33165,
+    "name": "Zehdenick",
+    "admin1": "Brandenburg"
+  },
+  "haidmühle": {
+    "lat": 48.82565,
+    "lng": 13.77649,
+    "name": "Haidmühle",
+    "admin1": "Bayern"
+  },
+  "gutach im breisgau": {
+    "lat": 48.11667,
+    "lng": 7.98333,
+    "name": "Gutach im Breisgau",
+    "admin1": "Baden-Württemberg"
+  },
+  "südheide": {
+    "lat": 53.07707,
+    "lng": 8.19266,
+    "name": "Südheide",
+    "admin1": "Niedersachsen"
+  },
+  "unterlüß": {
+    "lat": 52.83471,
+    "lng": 10.29685,
+    "name": "Unterlüß",
+    "admin1": "Niedersachsen"
+  },
+  "breckerfeld": {
+    "lat": 51.25926,
+    "lng": 7.46807,
+    "name": "Breckerfeld",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "glöwen": {
+    "lat": 52.91418,
+    "lng": 12.08548,
+    "name": "Glöwen",
+    "admin1": "Brandenburg"
+  },
+  "laatzen": {
+    "lat": 52.31506,
+    "lng": 9.79739,
+    "name": "Laatzen",
+    "admin1": "Niedersachsen"
+  },
+  "obermögersheim": {
+    "lat": 49.05917,
+    "lng": 10.65787,
+    "name": "Obermögersheim",
+    "admin1": "Bayern"
+  },
+  "speyer": {
+    "lat": 49.32083,
+    "lng": 8.43111,
+    "name": "Speyer",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "wismar": {
+    "lat": 53.89314,
+    "lng": 11.45286,
+    "name": "Wismar",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "kelsterbach": {
+    "lat": 50.06135,
+    "lng": 8.52916,
+    "name": "Kelsterbach",
+    "admin1": "Hessen"
+  },
+  "mettmann": {
+    "lat": 51.2504,
+    "lng": 6.97536,
+    "name": "Mettmann",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "melle": {
+    "lat": 51.00232,
+    "lng": 3.80526,
+    "name": "Melle",
+    "admin1": "Flandern"
+  },
+  "mühlacker": {
+    "lat": 48.94754,
+    "lng": 8.83675,
+    "name": "Mühlacker",
+    "admin1": "Baden-Württemberg"
+  },
+  "hollern-twielenfleth": {
+    "lat": 53.59983,
+    "lng": 9.5522,
+    "name": "Twielenfleth",
+    "admin1": "Niedersachsen"
+  },
+  "weinheim": {
+    "lat": 49.54887,
+    "lng": 8.66697,
+    "name": "Weinheim",
+    "admin1": "Baden-Württemberg"
+  },
+  "hettstadt": {
+    "lat": 49.79944,
+    "lng": 9.815,
+    "name": "Hettstadt",
+    "admin1": "Bayern"
+  },
+  "ruhpolding": {
+    "lat": 47.76667,
+    "lng": 12.65,
+    "name": "Ruhpolding",
+    "admin1": "Bayern"
+  },
+  "gröbenzell": {
+    "lat": 48.2,
+    "lng": 11.36667,
+    "name": "Gröbenzell",
+    "admin1": "Bayern"
+  },
+  "boostedt": {
+    "lat": 54.01667,
+    "lng": 10.03333,
+    "name": "Boostedt",
+    "admin1": "Schleswig-Holstein"
+  },
+  "fürth": {
+    "lat": 49.47593,
+    "lng": 10.98856,
+    "name": "Fürth",
+    "admin1": "Bayern"
+  },
+  "harsefeld": {
+    "lat": 53.45399,
+    "lng": 9.50297,
+    "name": "Harsefeld",
+    "admin1": "Niedersachsen"
+  },
+  "barsbüttel": {
+    "lat": 53.56667,
+    "lng": 10.16667,
+    "name": "Barsbüttel",
+    "admin1": "Schleswig-Holstein"
+  },
+  "eichstätt": {
+    "lat": 48.88854,
+    "lng": 11.19675,
+    "name": "Eichstätt",
+    "admin1": "Bayern"
+  },
+  "großostheim": {
+    "lat": 49.91985,
+    "lng": 9.07596,
+    "name": "Großostheim",
+    "admin1": "Bayern"
+  },
+  "traunreut": {
+    "lat": 47.96269,
+    "lng": 12.59231,
+    "name": "Traunreut",
+    "admin1": "Bayern"
+  },
+  "goch": {
+    "lat": 51.67873,
+    "lng": 6.15895,
+    "name": "Goch",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "wolfratshausen": {
+    "lat": 47.91289,
+    "lng": 11.42166,
+    "name": "Wolfratshausen",
+    "admin1": "Bayern"
+  },
+  "adelshofen": {
+    "lat": 48.18333,
+    "lng": 11.11667,
+    "name": "Adelshofen",
+    "admin1": "Bayern"
+  },
+  "barum": {
+    "lat": 53.35,
+    "lng": 10.4,
+    "name": "Barum",
+    "admin1": "Niedersachsen"
+  },
+  "wachtendonk": {
+    "lat": 51.40916,
+    "lng": 6.33894,
+    "name": "Wachtendonk",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "geschwenda": {
+    "lat": 50.73178,
+    "lng": 10.8254,
+    "name": "Geschwenda",
+    "admin1": "Thüringen"
+  },
+  "fichtenberg": {
+    "lat": 48.98601,
+    "lng": 9.71199,
+    "name": "Fichtenberg",
+    "admin1": "Baden-Württemberg"
+  },
+  "eicklingen": {
+    "lat": 52.55037,
+    "lng": 10.18439,
+    "name": "Eicklingen",
+    "admin1": "Niedersachsen"
+  },
+  "duingen": {
+    "lat": 52.00449,
+    "lng": 9.69578,
+    "name": "Duingen",
+    "admin1": "Niedersachsen"
+  },
+  "winhöring": {
+    "lat": 48.26667,
+    "lng": 12.65,
+    "name": "Winhöring",
+    "admin1": "Bayern"
+  },
+  "gelenau": {
+    "lat": 50.71151,
+    "lng": 12.96666,
+    "name": "Gelenau",
+    "admin1": "Sachsen"
+  },
+  "burgkirchen": {
+    "lat": 48.20443,
+    "lng": 13.09991,
+    "name": "Burgkirchen",
+    "admin1": "Oberösterreich"
+  },
+  "thüngersheim": {
+    "lat": 49.87833,
+    "lng": 9.84917,
+    "name": "Thüngersheim",
+    "admin1": "Bayern"
+  },
+  "bad orb": {
+    "lat": 50.22788,
+    "lng": 9.34782,
+    "name": "Bad Orb",
+    "admin1": "Hessen"
+  },
+  "usingen": {
+    "lat": 50.33554,
+    "lng": 8.53688,
+    "name": "Usingen",
+    "admin1": "Hessen"
+  },
+  "jetzendorf": {
+    "lat": 48.43333,
+    "lng": 11.41667,
+    "name": "Jetzendorf",
+    "admin1": "Bayern"
+  },
+  "hockenheim": {
+    "lat": 49.32334,
+    "lng": 8.55194,
+    "name": "Hockenheim",
+    "admin1": "Baden-Württemberg"
+  },
+  "memmelsdorf": {
+    "lat": 49.93012,
+    "lng": 10.95921,
+    "name": "Memmelsdorf",
+    "admin1": "Bayern"
+  },
+  "landstuhl": {
+    "lat": 49.41306,
+    "lng": 7.57021,
+    "name": "Landstuhl",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "winsen (luhe)": {
+    "lat": 53.35753,
+    "lng": 10.21282,
+    "name": "Winsen (Luhe)",
+    "admin1": "Niedersachsen"
+  },
+  "straelen": {
+    "lat": 51.4419,
+    "lng": 6.26639,
+    "name": "Straelen",
+    "admin1": "Nordrhein-Westfalen"
   }
 }
