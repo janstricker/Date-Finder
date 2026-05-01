@@ -8500,5 +8500,161 @@
     "lng": 6.26639,
     "name": "Straelen",
     "admin1": "Nordrhein-Westfalen"
+  },
+  "marsberg": {
+    "lat": 51.46171,
+    "lng": 8.84949,
+    "name": "Marsberg",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "kandern": {
+    "lat": 47.71393,
+    "lng": 7.66237,
+    "name": "Kandern",
+    "admin1": "Baden-Württemberg"
+  },
+  "besigheim": {
+    "lat": 48.99797,
+    "lng": 9.14268,
+    "name": "Besigheim",
+    "admin1": "Baden-Württemberg"
+  },
+  "gundelsheim": {
+    "lat": 49.93708,
+    "lng": 10.9199,
+    "name": "Gundelsheim",
+    "admin1": "Bayern"
+  },
+  "elz": {
+    "lat": 42.12201,
+    "lng": -77.94806,
+    "name": "Wellsville",
+    "admin1": "New York"
+  },
+  "breitenbrunn": {
+    "lat": 47.94452,
+    "lng": 16.73149,
+    "name": "Breitenbrunn am Neusiedler See",
+    "admin1": "Burgenland"
+  },
+  "sonthofen": {
+    "lat": 47.51821,
+    "lng": 10.28262,
+    "name": "Sonthofen",
+    "admin1": "Bayern"
+  },
+  "kirchzarten": {
+    "lat": 47.96667,
+    "lng": 7.95,
+    "name": "Kirchzarten",
+    "admin1": "Baden-Württemberg"
+  },
+  "aindling": {
+    "lat": 48.5136,
+    "lng": 10.95315,
+    "name": "Aindling",
+    "admin1": "Bayern"
+  },
+  "bad freienwalde": {
+    "lat": 52.7873,
+    "lng": 14.0304,
+    "name": "Bad Freienwalde",
+    "admin1": "Brandenburg"
+  },
+  "niederdorfelden": {
+    "lat": 50.19415,
+    "lng": 8.80005,
+    "name": "Niederdorfelden",
+    "admin1": "Hessen"
+  },
+  "bleicherode": {
+    "lat": 51.44026,
+    "lng": 10.57202,
+    "name": "Bleicherode",
+    "admin1": "Thüringen"
+  },
+  "zielitz": {
+    "lat": 52.28958,
+    "lng": 11.67572,
+    "name": "Zielitz",
+    "admin1": "Sachsen-Anhalt"
+  },
+  "fambach": {
+    "lat": 50.73333,
+    "lng": 10.36667,
+    "name": "Fambach",
+    "admin1": "Thüringen"
+  },
+  "baierbrunn": {
+    "lat": 48.0203,
+    "lng": 11.48689,
+    "name": "Baierbrunn",
+    "admin1": "Bayern"
+  },
+  "haselbachtal": {
+    "lat": 51.2357,
+    "lng": 14.02576,
+    "name": "Haselbachtal",
+    "admin1": "Sachsen"
+  },
+  "winnenden": {
+    "lat": 48.87563,
+    "lng": 9.39819,
+    "name": "Winnenden",
+    "admin1": "Baden-Württemberg"
+  },
+  "ellerbek": {
+    "lat": 53.65817,
+    "lng": 9.86991,
+    "name": "Ellerbek",
+    "admin1": "Schleswig-Holstein"
+  },
+  "mehrstetten": {
+    "lat": 48.37609,
+    "lng": 9.566,
+    "name": "Mehrstetten",
+    "admin1": "Baden-Württemberg"
+  },
+  "bad laasphe": {
+    "lat": 50.93139,
+    "lng": 8.42502,
+    "name": "Bad Laasphe",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "meppen": {
+    "lat": 52.69064,
+    "lng": 7.29097,
+    "name": "Meppen",
+    "admin1": "Niedersachsen"
+  },
+  "gau-algesheim": {
+    "lat": 49.95669,
+    "lng": 8.01569,
+    "name": "Gau-Algesheim",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "gilching": {
+    "lat": 48.10755,
+    "lng": 11.2936,
+    "name": "Gilching",
+    "admin1": "Bayern"
+  },
+  "staufen": {
+    "lat": 47.38197,
+    "lng": 8.16681,
+    "name": "Staufen",
+    "admin1": "Aargau"
+  },
+  "laupheim": {
+    "lat": 48.22786,
+    "lng": 9.87874,
+    "name": "Laupheim",
+    "admin1": "Baden-Württemberg"
+  },
+  "breit": {
+    "lat": 49.77561,
+    "lng": 6.90559,
+    "name": "Breit",
+    "admin1": "Rheinland-Pfalz"
   }
 }
