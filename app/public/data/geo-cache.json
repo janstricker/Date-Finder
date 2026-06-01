@@ -8656,5 +8656,173 @@
     "lng": 6.90559,
     "name": "Breit",
     "admin1": "Rheinland-Pfalz"
+  },
+  "seekirch": {
+    "lat": 48.1,
+    "lng": 9.65,
+    "name": "Seekirch",
+    "admin1": "Baden-Württemberg"
+  },
+  "bad iburg": {
+    "lat": 52.1549,
+    "lng": 8.04216,
+    "name": "Bad Iburg",
+    "admin1": "Niedersachsen"
+  },
+  "bad wünnenberg": {
+    "lat": 51.52002,
+    "lng": 8.69934,
+    "name": "Bad Wünnenberg",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "schwaan": {
+    "lat": 53.93956,
+    "lng": 12.11092,
+    "name": "Schwaan",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "nortorf": {
+    "lat": 54.16738,
+    "lng": 9.85437,
+    "name": "Nortorf",
+    "admin1": "Schleswig-Holstein"
+  },
+  "olbersdorf": {
+    "lat": 50.87304,
+    "lng": 14.77035,
+    "name": "Olbersdorf",
+    "admin1": "Sachsen"
+  },
+  "bad teinach": {
+    "lat": 48.68906,
+    "lng": 8.69031,
+    "name": "Bad Teinach",
+    "admin1": "Baden-Württemberg"
+  },
+  "leiwen": {
+    "lat": 49.81667,
+    "lng": 6.88333,
+    "name": "Leiwen",
+    "admin1": "Rheinland-Pfalz"
+  },
+  "haren (ems)": {
+    "lat": 52.79315,
+    "lng": 7.24135,
+    "name": "Haren (Ems)",
+    "admin1": "Niedersachsen"
+  },
+  "unterreichenbach": {
+    "lat": 48.82496,
+    "lng": 8.70885,
+    "name": "Unterreichenbach",
+    "admin1": "Baden-Württemberg"
+  },
+  "waren (müritz)": {
+    "lat": 53.51986,
+    "lng": 12.68128,
+    "name": "Waren (Müritz)",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "glottertal": {
+    "lat": 48.05078,
+    "lng": 7.96337,
+    "name": "Glottertal",
+    "admin1": "Baden-Württemberg"
+  },
+  "kirchberg im wald": {
+    "lat": 48.90006,
+    "lng": 13.182,
+    "name": "Kirchberg",
+    "admin1": "Bayern"
+  },
+  "waldershof": {
+    "lat": 49.98144,
+    "lng": 12.06291,
+    "name": "Waldershof",
+    "admin1": "Bayern"
+  },
+  "gartow": {
+    "lat": 53.0247,
+    "lng": 11.462,
+    "name": "Gartow",
+    "admin1": "Niedersachsen"
+  },
+  "barth": {
+    "lat": 54.36346,
+    "lng": 12.72491,
+    "name": "Barth",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "bad bellingen": {
+    "lat": 47.73147,
+    "lng": 7.55756,
+    "name": "Bad Bellingen",
+    "admin1": "Baden-Württemberg"
+  },
+  "schongau": {
+    "lat": 47.26851,
+    "lng": 8.26511,
+    "name": "Schongau",
+    "admin1": "Kanton Luzern"
+  },
+  "bad driburg": {
+    "lat": 51.73297,
+    "lng": 9.01969,
+    "name": "Bad Driburg",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "bad bederkesa": {
+    "lat": 53.62367,
+    "lng": 8.83799,
+    "name": "Bad Bederkesa",
+    "admin1": "Niedersachsen"
+  },
+  "breitungen/werra": {
+    "lat": 50.76355,
+    "lng": 10.32724,
+    "name": "Breitungen/Werra",
+    "admin1": "Thüringen"
+  },
+  "hattingen": {
+    "lat": 51.39894,
+    "lng": 7.18557,
+    "name": "Hattingen",
+    "admin1": "Nordrhein-Westfalen"
+  },
+  "burgdorf (region hannover)": {
+    "lat": 52.44628,
+    "lng": 10.0064,
+    "name": "Burgdorf (Region Hannover)",
+    "admin1": "Niedersachsen"
+  },
+  "wiesensteig": {
+    "lat": 48.56127,
+    "lng": 9.6254,
+    "name": "Wiesensteig",
+    "admin1": "Baden-Württemberg"
+  },
+  "zeil am main": {
+    "lat": 50.00986,
+    "lng": 10.5947,
+    "name": "Zeil",
+    "admin1": "Bayern"
+  },
+  "hann. münden": {
+    "lat": 51.41505,
+    "lng": 9.65046,
+    "name": "Hann. Münden",
+    "admin1": "Niedersachsen"
+  },
+  "graal-müritz": {
+    "lat": 54.25124,
+    "lng": 12.25139,
+    "name": "Seeheilbad Graal-Müritz",
+    "admin1": "Mecklenburg-Vorpommern"
+  },
+  "bergkamen": {
+    "lat": 51.61633,
+    "lng": 7.64451,
+    "name": "Bergkamen",
+    "admin1": "Nordrhein-Westfalen"
   }
 }
